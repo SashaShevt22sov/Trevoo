@@ -114,7 +114,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        ex.printStackTrace();
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String field = ((FieldError) error).getField();
@@ -142,21 +141,22 @@ public class GlobalExceptionHandler {
 
 // ==================== УТИЛИТЫ ====================
 
-private ResponseEntity<Map<String, Object>> buildErrorResponse(
-        HttpStatus status,
-        String message,
-        Map<String, String> validationErrors, Map<String, String> extraFields) {
+    private ResponseEntity<Map<String, Object>> buildErrorResponse(
+            HttpStatus status,
+            String message,
+            Map<String, String> validationErrors, Map<String, String> extraFields) {
 
-    Map<String, Object> body = new HashMap<>();
-    body.put("timestamp", LocalDateTime.now());
-    body.put("status", status.value());
-    body.put("error", status.getReasonPhrase());
-    body.put("message", message);
-    body.put("validationErrors", validationErrors != null ? validationErrors : null);
-    if (extraFields != null) {
-        body.putAll(extraFields);
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", status.value());
+        body.put("error", status.getReasonPhrase());
+        body.put("message", message);
+        body.put("validationErrors", validationErrors);
+
+        if (extraFields != null) {
+            body.putAll(extraFields);
+        }
+
+        return new ResponseEntity<>(body, status);
     }
-
-    return new ResponseEntity<>(body, status);
-}
 }
