@@ -206,7 +206,7 @@ public class JwtAccessTokenService {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            log.info("   Поменял для GITHUB");
+
             log.info("   ✅ Claims успешно извлечены");
             log.info("   📋 Содержимое claims:");
             claims.forEach((key, value) ->
