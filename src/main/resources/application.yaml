@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: Zvonok
+
+  threads:
+    virtual:
+      enabled: true   # включаем виртуальные потоки
+
+  datasource:
+    url: ${DATASOURCE_URL_POSTGRES}
+    username: ${DATASOURCE_USERNAME_POSTGRES}
+    password: ${DATASOURCE_PASSWORD_POSTGRES}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 10          # минимальные соединения в пуле
+      maximum-pool-size: 60     # максимум соединений (для 200–500 пользователей)
+      idle-timeout: 30000       # 30 сек, сколько держать неиспользуемые соединения
+      max-lifetime: 1800000     # 30 мин, после этого Hikari обновляет соединение
+      connection-timeout: 30000 # таймаут ожидания свободного соединения
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+    default-encoding: UTF-8
+
+  data:
+    redis:
+      host: ${DATA_REDIS_HOST:localhost}
+      port: ${DATA_REDIS_PORT}
+      password: ${DATA_REDIS_PASSWORD}
+      timeout: 6000ms
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.transaction: DEBUG
+    Zvonok: DEBUG
+
+jwt:
+  access:
+    secret: ${JWT_ACCESS_SECRET}
+    expiration: ${JWT_ACCESS_EXP}
+
+  refresh:
+    expiration: ${JWT_REFRESH_EXP}
