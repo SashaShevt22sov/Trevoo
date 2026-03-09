@@ -89,7 +89,7 @@ public class FriendShipService {
         notificationService.deleteNotification(user, friend);
         return "Заявка успешно отменена";
     }
-
+    // ========================================================= Принятие заявки в друзья
     @Transactional
     public String acceptFriendRequest(Long userId, String friendUsername) {
         User user = getUserById(userId);
@@ -102,14 +102,14 @@ public class FriendShipService {
             throw new IllegalStateException("Заявка не найдена или уже принята");
         }
 
-        var friendShip = existing.get();
+        FriendShip friendShip = existing.get();
 
         friendShip.setStatus(FriendShipType.ACCEPTED);
         friendShip.setUpdatedAt(now());
 
-        friendShipRepository.save(existing.get());
+        friendShipRepository.save(friendShip);
 
-        notificationService.deleteNotification(user, friend);
+        notificationService.deleteNotification(friend,user );
         return "Заявка успешно принята";
     }
 

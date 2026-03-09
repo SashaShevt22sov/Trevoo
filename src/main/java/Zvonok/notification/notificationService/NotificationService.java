@@ -78,19 +78,29 @@ public class NotificationService {
 
     public void deleteNotification(User sender, User recipient) {
 
-        Optional<Notification> notification = notificationRepository
-                .findBySenderAndRecipientAndType(sender, recipient, NotificationType.FRIEND_REQUEST);
+        // ищем уведомление от sender к recipient
+        notificationRepository.findBySender_IdAndRecipient_IdAndType
+                        (sender.getId(), recipient.getId(), NotificationType.FRIEND_REQUEST)
+                .ifPresent(notif -> {
+                    notificationRepository.delete(notif);
+                    sendDeleteWebSocket(notif, recipient);
+                });
 
-        if (notification.isPresent()) {
-            Notification notif = notification.get();
-            notificationRepository.delete(notification.get());
-            WebSocketDeleteNotificationDto dtoDelete = new WebSocketDeleteNotificationDto();
-            dtoDelete.setId(notif.getId());
-            dtoDelete.setTypeWebSocket("DELETE");
-
-            webSocketNotificationController.sendDeleteNotification(dtoDelete,recipient.getUsername());
-        }
+        // ищем уведомление от recipient к sender
+        notificationRepository.findBySender_IdAndRecipient_IdAndType
+                        (recipient.getId(), sender.getId(), NotificationType.FRIEND_REQUEST)
+                .ifPresent(notif -> {
+                    notificationRepository.delete(notif);
+                    sendDeleteWebSocket(notif, sender);
+                });
 
 
+    }
+    // =============================================== ХЕЛП МЕПТОДЫ
+    private void sendDeleteWebSocket(Notification notif, User recipient) {
+        WebSocketDeleteNotificationDto dtoDelete = new WebSocketDeleteNotificationDto();
+        dtoDelete.setId(notif.getId());
+        dtoDelete.setTypeWebSocket("DELETE");
+        webSocketNotificationController.sendDeleteNotification(dtoDelete, recipient.getUsername());
     }
 }

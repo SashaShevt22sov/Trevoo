@@ -107,6 +107,7 @@ public class FriendShipController {
         return ResponseEntity.ok(new ApiResponse(message));
     }
 
+    // ========================================================= Принятие заявки в друзья
     @Operation(
             summary = "Принятие конкретной заявки"
     )
