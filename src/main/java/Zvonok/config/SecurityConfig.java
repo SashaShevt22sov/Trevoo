@@ -23,7 +23,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
 
         log.info("=== Инициализация SecurityFilterChain ===");
 
@@ -48,7 +48,9 @@ public class SecurityConfig {
                             "/api/v1/auth/**",
                             "/avatars/**",
                             "/ws/**",
-                            "/topic/**"
+                            "/topic/**",
+                            "/swagger-ui/**",
+                            "/v3/**"
                     };
 
                     log.info("PermitAll endpoints:");

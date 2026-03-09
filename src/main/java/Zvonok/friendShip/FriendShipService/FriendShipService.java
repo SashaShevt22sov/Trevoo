@@ -1,14 +1,12 @@
 package Zvonok.friendShip.FriendShipService;
 
-import Zvonok.friendShip.FriendShipDto.FriendShipAddRequest;
+import Zvonok.common.exception.customException.friendException.CannotAddYourselfAsFriendException;
+import Zvonok.common.exception.customException.friendException.FriendRequestAlreadySentException;
+import Zvonok.common.exception.customException.userException.UserNotFoundException;
 import Zvonok.friendShip.FriendShipDto.FriendShipInfo;
 import Zvonok.friendShip.FriendShipRepository.FriendShipRepository;
 import Zvonok.friendShip.FriendShipType.FriendShipType;
 import Zvonok.friendShip.entity.FriendShip;
-import Zvonok.common.exception.customException.friendException.AlreadyFriendsException;
-import Zvonok.common.exception.customException.friendException.CannotAddYourselfAsFriendException;
-import Zvonok.common.exception.customException.friendException.FriendRequestAlreadySentException;
-import Zvonok.common.exception.customException.userException.UserNotFoundException;
 import Zvonok.notification.notificationService.NotificationService;
 import Zvonok.user.entity.User;
 import Zvonok.user.userRepository.UserRepository;
@@ -17,10 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static java.time.LocalDateTime.now;
 
 @Slf4j
 @Service
@@ -56,8 +55,8 @@ public class FriendShipService {
         FriendShip fs = FriendShip.builder()
                 .user(user)
                 .friend(friend)
-                .updatedAt(LocalDateTime.now())
-                .createdAt(LocalDateTime.now())
+                .updatedAt(now())
+                .createdAt(now())
                 .status(FriendShipType.PENDING)
                 .build();
 
@@ -91,56 +90,77 @@ public class FriendShipService {
         return "Заявка успешно отменена";
     }
 
-// ========================================================= Подгружаю список все заявок пользователя (PENDING)
-@Transactional
-public List<FriendShipInfo> getOutgoingRequests(Long userId) {
+    @Transactional
+    public String acceptFriendRequest(Long userId, String friendUsername) {
+        User user = getUserById(userId);
+        User friend = userRepository.findByUsername(friendUsername)
+                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
 
-    User user = getUserById(userId);
+        Optional<FriendShip> existing = friendShipRepository.findRelation(user, friend);
 
-    return friendShipRepository
-            .findAllByUserAndStatus(user, FriendShipType.PENDING)
-            .stream()
-            .map(fs -> new FriendShipInfo(
-                    fs.getFriend().getUsername(),
-                    fs.getStatus(),
-                    fs.getCreatedAt()
-            ))
-            .collect(Collectors.toList());
-}
+        if (existing.isEmpty() || existing.get().getStatus() != FriendShipType.PENDING) {
+            throw new IllegalStateException("Заявка не найдена или уже принята");
+        }
+
+        var friendShip = existing.get();
+
+        friendShip.setStatus(FriendShipType.ACCEPTED);
+        friendShip.setUpdatedAt(now());
+
+        friendShipRepository.save(existing.get());
+
+        notificationService.deleteNotification(user, friend);
+        return "Заявка успешно принята";
+    }
+
+    // ========================================================= Подгружаю список все заявок пользователя (PENDING)
+    @Transactional
+    public List<FriendShipInfo> getOutgoingRequests(Long userId) {
+
+        User user = getUserById(userId);
+
+        return friendShipRepository
+                .findAllByUserAndStatus(user, FriendShipType.PENDING)
+                .stream()
+                .map(fs -> new FriendShipInfo(
+                        fs.getFriend().getUsername(),
+                        fs.getStatus(),
+                        fs.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
+    }
 
 
-// ========================================================= Подгружаю список друзей (ACCEPT)
-public List<FriendShipInfo> getFriends(Long userId) {
+    // ========================================================= Подгружаю список друзей (ACCEPT)
+    public List<FriendShipInfo> getFriends(Long userId) {
 
-    User user = getUserById(userId);
+        User user = getUserById(userId);
 
-    return friendShipRepository.findAllByUserAndStatus(user, FriendShipType.ACCEPTED).stream()
-            .map(fs -> new FriendShipInfo(
-                    fs.getFriend().getUsername(),
-                    fs.getStatus(),
-                    fs.getCreatedAt()
-            ))
-            .collect(Collectors.toList());
-}
-
-
-
+        return friendShipRepository.findAllByUserAndStatus(user, FriendShipType.ACCEPTED).stream()
+                .map(fs -> new FriendShipInfo(
+                        fs.getFriend().getUsername(),
+                        fs.getStatus(),
+                        fs.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
+    }
 
 
 // ========================================================= ХЕЛП МЕТОДЫ
 
-private User getUserById(Long userId) {
-    return userRepository.findById(userId)
-            .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
-}
-
-private User getUserByUsername(String username) {
-    return userRepository.findByUsername(username)
-            .orElseThrow(() -> new UserNotFoundException("Пользователь с таким никнеймом не найден"));
-}
-
-   private void validateNotSameUser(User user, User friend) {
-    if (user.getId().equals(friend.getId())) {
-        throw new CannotAddYourselfAsFriendException("Нельзя отправить заявку самому себе");
+    private User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
     }
-}}
+
+    private User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("Пользователь с таким никнеймом не найден"));
+    }
+
+    private void validateNotSameUser(User user, User friend) {
+        if (user.getId().equals(friend.getId())) {
+            throw new CannotAddYourselfAsFriendException("Нельзя отправить заявку самому себе");
+        }
+    }
+}

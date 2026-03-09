@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:18.3-alpine
+    container_name: postgres-trevo-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+  redis:
+    image: redis:8.4-alpine
+    container_name: redis-trevoo-db
+    environment:
+      REDIS_ARGS: >
+              --requirepass ${REDIS_PASSWORD}
+              --appendonly yes
+              --io-threads 4
+              --io-threads-do-reads yes
+              --search-io-threads 4  # I/O threads для поисковых запросов
+              --search-oom IGNORE
+    ports:
+      - "6379:6379"  # Redis порт
+      - "8001:8001"  # Redis Insight (веб-интерфейс)
