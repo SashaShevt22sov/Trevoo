@@ -6,6 +6,13 @@ spring:
     virtual:
       enabled: true   # включаем виртуальные потоки
 
+  minio-client:
+    endpoint: ${MINIO_URL}
+    access-key: ${MINIO_ACCESS_KEY:minioadmin}
+    secret-key: ${MINIO_SECRET_KEY:minioadmin}
+    default-bucket-name: ${MINIO_DEFAULT_APP_BUCKET:trevoo}
+    enabled-default-api: true
+
   datasource:
     url: ${DATASOURCE_URL_POSTGRES}
     username: ${DATASOURCE_USERNAME_POSTGRES}

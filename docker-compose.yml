@@ -24,3 +24,17 @@ services:
     ports:
       - "6379:6379"  # Redis порт
       - "8001:8001"  # Redis Insight (веб-интерфейс)
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"   # порт для S3 API
+      - "9001:9001"   # порт для веб-консоли
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}      # логин администратора
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}  # пароль администратора (минимум 8 символов)
+
+    volumes:
+      - ${MINIO_PATH_FOLDER}:/data                    # монтируем локальную папку для хранения данных
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
