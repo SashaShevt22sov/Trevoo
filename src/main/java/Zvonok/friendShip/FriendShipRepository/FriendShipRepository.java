@@ -19,7 +19,13 @@ public interface FriendShipRepository extends JpaRepository<FriendShip,Long> {
     Optional<FriendShip> findRelation(@Param("user1") User user1,
                                       @Param("user2") User user2);
 
-    List<FriendShip> findAllByUser(User user);
+    // Поиск всеx друзей ACCEPT в двух направлениях
+    @Query("""
+                SELECT f FROM FriendShip f 
+                WHERE ((f.user = :user OR f.friend = :user) AND f.status = 'ACCEPTED')
+            """)
+    List<FriendShip> findAllAcceptedFriends(@Param("user") User user);
+
     List<FriendShip> findAllByUserAndStatus(User user, FriendShipType status);
 
     boolean existsByUserAndFriend (User friend,User user);

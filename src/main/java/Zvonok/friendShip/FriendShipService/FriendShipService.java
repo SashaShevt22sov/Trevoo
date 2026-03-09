@@ -131,17 +131,20 @@ public class FriendShipService {
     }
 
 
-    // ========================================================= Подгружаю список друзей (ACCEPT)
     public List<FriendShipInfo> getFriends(Long userId) {
 
         User user = getUserById(userId);
 
-        return friendShipRepository.findAllByUserAndStatus(user, FriendShipType.ACCEPTED).stream()
-                .map(fs -> new FriendShipInfo(
-                        fs.getFriend().getUsername(),
-                        fs.getStatus(),
-                        fs.getCreatedAt()
-                ))
+        return friendShipRepository.findAllAcceptedFriends(user).stream()
+                .map(fs -> {
+                    User friend = fs.getUser().equals(user) ? fs.getFriend() : fs.getUser();
+                    return new FriendShipInfo(
+                            friend.getUsername(),
+                            fs.getStatus(),
+                            fs.getCreatedAt()
+
+                    );
+                })
                 .collect(Collectors.toList());
     }
 
