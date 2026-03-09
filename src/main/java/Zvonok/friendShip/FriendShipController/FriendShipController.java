@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -87,6 +88,7 @@ public class FriendShipController {
         return ResponseEntity.ok(friendShipService.getFriends(userDetails.getId()));
     }
 
+    // ========================================================= Отмена заявки(Sender)
     @Operation(
             summary = "Отклонение конкретной заявки",
             description = "Не работает!"
@@ -95,6 +97,7 @@ public class FriendShipController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Заявка успешно отменена"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Доступ запрещён!")
     })
+
     @DeleteMapping("/cancel/{friendUsername}")
     public ResponseEntity<ApiResponse> cancelFriendRequest(
             @PathVariable @Parameter(description = "username добавляемого пользователя") String friendUsername,
@@ -106,7 +109,6 @@ public class FriendShipController {
 
         return ResponseEntity.ok(new ApiResponse(message));
     }
-
     // ========================================================= Принятие заявки в друзья
     @Operation(
             summary = "Принятие конкретной заявки"
@@ -118,7 +120,8 @@ public class FriendShipController {
     })
     @PutMapping("/accept/{friendUsername}")
     public ResponseEntity<ApiResponse> acceptFriendRequest(
-            @PathVariable @Parameter(description = "username добавляемого пользователя") String friendUsername,
+            @PathVariable @Parameter(description = "user" +
+                    "name добавляемого пользователя") String friendUsername,
             @AuthenticationPrincipal @Parameter(hidden = true) MyUserDetails currentUser
     ) {
         Long userId = currentUser.getId();

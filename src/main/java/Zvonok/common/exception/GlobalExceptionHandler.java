@@ -3,6 +3,7 @@ package Zvonok.common.exception;
 import Zvonok.common.exception.customException.friendException.AlreadyFriendsException;
 import Zvonok.common.exception.customException.friendException.CannotAddYourselfAsFriendException;
 import Zvonok.common.exception.customException.friendException.FriendRequestAlreadySentException;
+import Zvonok.common.exception.customException.friendException.NoPermissionException;
 import Zvonok.common.exception.customException.jwtException.JwtGenerationException;
 import Zvonok.common.exception.customException.jwtException.JwtSecretException;
 import Zvonok.common.exception.customException.otpException.InvalidOtpCodeException;
@@ -88,6 +89,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CannotAddYourselfAsFriendException.class)
     public ResponseEntity<Map<String, Object>> handleCannotAddYourselfAsFriendException(
             CannotAddYourselfAsFriendException ex) {
+
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null, null);
+    }
+    @ExceptionHandler(NoPermissionException.class)
+    public ResponseEntity<Map<String, Object>> handleNoPermissionException(
+            NoPermissionException ex) {
 
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null, null);
     }

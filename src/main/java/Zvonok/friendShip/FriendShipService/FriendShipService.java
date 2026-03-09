@@ -2,6 +2,7 @@ package Zvonok.friendShip.FriendShipService;
 
 import Zvonok.common.exception.customException.friendException.CannotAddYourselfAsFriendException;
 import Zvonok.common.exception.customException.friendException.FriendRequestAlreadySentException;
+import Zvonok.common.exception.customException.friendException.NoPermissionException;
 import Zvonok.common.exception.customException.userException.UserNotFoundException;
 import Zvonok.friendShip.FriendShipDto.FriendShipInfo;
 import Zvonok.friendShip.FriendShipRepository.FriendShipRepository;
@@ -74,21 +75,31 @@ public class FriendShipService {
     @Transactional
     public String cancelFriendRequest(Long userId, String friendUsername) {
 
-        User user = getUserById(userId);
-        User friend = userRepository.findByUsername(friendUsername)
+        User userSender = getUserById(userId);
+        User friendRecipient = userRepository.findByUsername(friendUsername)
                 .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
 
-        Optional<FriendShip> existing = friendShipRepository.findRelation(user, friend);
+        Optional<FriendShip> existing = friendShipRepository.findRelation(userSender, friendRecipient);
 
         if (existing.isEmpty() || existing.get().getStatus() != FriendShipType.PENDING) {
             throw new IllegalStateException("Заявка не найдена или уже принята");
         }
 
-        friendShipRepository.delete(existing.get());
+        FriendShip friendShip = existing.get();
 
-        notificationService.deleteNotification(user, friend);
+        // Проверка что пользователь является участником заявки
+        if (!friendShip.getUser().equals(userSender) && !friendShip.getFriend().equals(userSender)) {
+            throw new NoPermissionException("Нет прав на выполнение действия");
+        }
+
+        friendShipRepository.delete(friendShip);
+
+        notificationService.deleteNotification(userSender, friendRecipient);
         return "Заявка успешно отменена";
     }
+
+
+
     // ========================================================= Принятие заявки в друзья
     @Transactional
     public String acceptFriendRequest(Long userId, String friendUsername) {
@@ -109,9 +120,10 @@ public class FriendShipService {
 
         friendShipRepository.save(friendShip);
 
-        notificationService.deleteNotification(friend,user );
+        notificationService.deleteNotification(friend, user);
         return "Заявка успешно принята";
     }
+
 
     // ========================================================= Подгружаю список все заявок пользователя (PENDING)
     @Transactional
@@ -130,7 +142,8 @@ public class FriendShipService {
                 .collect(Collectors.toList());
     }
 
-
+    // ========================================================= Получить список друзей (ACCEPT)
+    @Transactional
     public List<FriendShipInfo> getFriends(Long userId) {
 
         User user = getUserById(userId);
