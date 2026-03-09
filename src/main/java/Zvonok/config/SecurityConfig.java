@@ -3,6 +3,8 @@ package Zvonok.config;
 import Zvonok.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -21,6 +23,8 @@ public class SecurityConfig {
 
     private final CorsConfigurationSource corsConfigurationSource;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+     @Value( value = "${spring.minio-client.enabled-default-api:false}")
+    private boolean minioEndpointEnabled;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
@@ -44,14 +48,7 @@ public class SecurityConfig {
                     log.info("Configuring HTTP authorization rules:");
 
                     // Логируем все открытые endpoints
-                    String[] permitAllEndpoints = {
-                            "/api/v1/auth/**",
-                            "/avatars/**",
-                            "/ws/**",
-                            "/topic/**",
-                            "/swagger-ui/**",
-                            "/v3/**"
-                    };
+                    String[] permitAllEndpoints = getPermitAllEndpoints();
 
                     log.info("PermitAll endpoints:");
                     for (String endpoint : permitAllEndpoints) {
@@ -69,5 +66,29 @@ public class SecurityConfig {
         log.info("=== SecurityFilterChain инициализация завершена ===");
 
         return http.build();
+    }
+
+    private String @NonNull [] getPermitAllEndpoints() {
+        var permitAllEndpoints = new String[]{
+                "/api/v1/auth/**",
+                "/avatars/**",
+                "/ws/**",
+                "/topic/**",
+                "/swagger-ui/**",
+                "/v3/**"
+        };
+
+        if(minioEndpointEnabled){
+            permitAllEndpoints = new String[]{
+                    "/api/v1/auth/**",
+                    "/avatars/**",
+                    "/ws/**",
+                    "/topic/**",
+                    "/swagger-ui/**",
+                    "/v3/**",
+                    "/api/v1/data/**"
+            };
+        }
+        return permitAllEndpoints;
     }
 }
