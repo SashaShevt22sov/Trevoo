@@ -19,6 +19,7 @@ import Zvonok.common.exception.customException.refreshTokenException.RefreshToke
 import Zvonok.common.exception.customException.userException.InvalidCredentialsException;
 import Zvonok.common.exception.customException.userException.UserAlreadyExistsException;
 import Zvonok.common.exception.customException.otpException.VerificationExpiredException;
+import Zvonok.common.successrResponse.SuccessResponse;
 import Zvonok.email.EmailService;
 import Zvonok.jwt.accessToken.JwtAccessTokenService;
 import Zvonok.jwt.refreshToken.entity.RefreshToken;
@@ -398,7 +399,38 @@ public class AuthService {
 
     // =============================== ПОДТВЕРЖДЕНИЕ СБРОСА ПАРОЛЯ
     public ConfirmResetPasswordResponseDto confirmResetPassword(ConfirmResetPasswordRequestDto request) {
-        return null;
+
+        String newPassword = request.getNewPassword();
+        String resetToken = request.getResetToken();
+
+        Optional<PasswordResetToken> tokenOpt = passwordResetTokenRepository.findByToken(resetToken);
+
+        if (tokenOpt.isEmpty()) {
+            return ConfirmResetPasswordResponseDto.builder()
+                    .success(false)
+                    .message("Неверный или просроченный токен")
+                    .build();
+        }
+
+        PasswordResetToken token = tokenOpt.get();
+
+        if (token.getExpiryDate().isBefore(LocalDateTime.now())) {
+            passwordResetTokenRepository.delete(token);
+            return ConfirmResetPasswordResponseDto.builder()
+                    .success(false)
+                    .message("Токен истек")
+                    .build();
+        }
+
+        User user = token.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+
+        userRepository.save(user);
+
+        return ConfirmResetPasswordResponseDto.builder()
+                .success(true)
+                .message("Пароль успешно обновлен")
+                .build();
     }
 
 }

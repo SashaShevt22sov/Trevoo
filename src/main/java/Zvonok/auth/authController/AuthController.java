@@ -5,6 +5,8 @@ import Zvonok.auth.authDto.login.LoginRequestDto;
 import Zvonok.auth.authDto.login.LoginResponseDto;
 import Zvonok.auth.authDto.logout.LogoutResponseDto;
 import Zvonok.auth.authDto.refreshToken.TokenRefreshResponseDto;
+import Zvonok.auth.authDto.resetPassword.ConfirmResetPasswordRequestDto;
+import Zvonok.auth.authDto.resetPassword.ConfirmResetPasswordResponseDto;
 import Zvonok.auth.authDto.resetPassword.ResetPasswordRequestDto;
 import Zvonok.auth.authDto.resetPassword.ResetPasswordResponseDto;
 import Zvonok.auth.authService.AuthService;
@@ -123,6 +125,13 @@ public class AuthController {
     }
 
     // =============================== ПОДТВЕРЖДЕНИЕ СБРОСА ПАРОЛЯ
+    @PostMapping("/confirm-reset-password")
+    public ResponseEntity<ConfirmResetPasswordResponseDto> confirmResetPassword(
+            @RequestBody @Valid ConfirmResetPasswordRequestDto request
+    ) {
+        ConfirmResetPasswordResponseDto response = authService.confirmResetPassword(request);
 
+        return ResponseEntity.ok(response);
+    }
 
 }

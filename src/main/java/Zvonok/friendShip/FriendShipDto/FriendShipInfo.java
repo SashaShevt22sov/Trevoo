@@ -6,5 +6,7 @@ import java.time.LocalDateTime;
 
 public record FriendShipInfo(String friendUsername,
                              FriendShipType status,
-                             LocalDateTime createdAt) {
+                             LocalDateTime createdAt
+
+                             ) {
 }
