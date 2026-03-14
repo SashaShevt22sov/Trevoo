@@ -2,11 +2,14 @@ package Zvonok.user.entity;
 
 import Zvonok.friendShip.entity.FriendShip;
 import Zvonok.common.Enum.Role;
+import Zvonok.minio.entity.Document;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -52,5 +55,7 @@ public class User {
     @OneToMany(mappedBy = "friend", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<FriendShip> incomingFriendships = new HashSet<>();
 
+    @ManyToMany(mappedBy = "allowedUsers")
+    private List<Document> accessibleDocuments = new ArrayList<>();
 
 }
