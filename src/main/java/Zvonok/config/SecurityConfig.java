@@ -23,8 +23,6 @@ public class SecurityConfig {
 
     private final CorsConfigurationSource corsConfigurationSource;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-     @Value( value = "${spring.minio-client.enabled-default-api:false}")
-    private boolean minioEndpointEnabled;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
@@ -69,26 +67,14 @@ public class SecurityConfig {
     }
 
     private String @NonNull [] getPermitAllEndpoints() {
-        var permitAllEndpoints = new String[]{
+        return new String[]{
                 "/api/v1/auth/**",
                 "/avatars/**",
                 "/ws/**",
                 "/topic/**",
                 "/swagger-ui/**",
-                "/v3/**"
+                "/v3/**",
+                "/api/v1/data/preview/*"
         };
-
-        if(minioEndpointEnabled){
-            permitAllEndpoints = new String[]{
-                    "/api/v1/auth/**",
-                    "/avatars/**",
-                    "/ws/**",
-                    "/topic/**",
-                    "/swagger-ui/**",
-                    "/v3/**",
-                    "/api/v1/data/**"
-            };
-        }
-        return permitAllEndpoints;
     }
 }

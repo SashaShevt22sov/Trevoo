@@ -11,7 +11,6 @@ spring:
     access-key: ${MINIO_ACCESS_KEY:minioadmin}
     secret-key: ${MINIO_SECRET_KEY:minioadmin}
     default-bucket-name: ${MINIO_DEFAULT_APP_BUCKET:trevoo}
-    enabled-default-api: true
 
   datasource:
     url: ${DATASOURCE_URL_POSTGRES}
@@ -36,8 +35,8 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    username: ${MAIL_USERNAME:def}
+    password: ${MAIL_PASSWORD:1234}
     protocol: smtp
     properties:
       mail:
@@ -53,8 +52,8 @@ spring:
   data:
     redis:
       host: ${DATA_REDIS_HOST:localhost}
-      port: ${DATA_REDIS_PORT}
-      password: ${DATA_REDIS_PASSWORD}
+      port: ${DATA_REDIS_PORT:6379}
+      password: ${DATA_REDIS_PASSWORD:password}
       timeout: 6000ms
 
 logging:
@@ -67,7 +66,7 @@ logging:
 jwt:
   access:
     secret: ${JWT_ACCESS_SECRET}
-    expiration: ${JWT_ACCESS_EXP}
+    expiration: ${JWT_ACCESS_EXP:3600000}
 
   refresh:
-    expiration: ${JWT_REFRESH_EXP}
+    expiration: ${JWT_REFRESH_EXP:600000}
