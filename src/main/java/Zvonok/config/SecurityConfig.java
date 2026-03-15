@@ -73,7 +73,6 @@ public class SecurityConfig {
                 "/api/v1/auth/**",
                 "/avatars/**",
                 "/ws/**",
-                "/topic/**",
                 "/swagger-ui/**",
                 "/v3/**"
         };
@@ -83,7 +82,6 @@ public class SecurityConfig {
                     "/api/v1/auth/**",
                     "/avatars/**",
                     "/ws/**",
-                    "/topic/**",
                     "/swagger-ui/**",
                     "/v3/**",
                     "/api/v1/data/**"

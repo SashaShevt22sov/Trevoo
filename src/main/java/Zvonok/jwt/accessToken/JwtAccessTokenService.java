@@ -110,14 +110,9 @@ public class JwtAccessTokenService {
         log.info("   Токен (первые 20 символов): {}...",
                 token.substring(0, Math.min(20, token.length())));
 
-        try {
-            String username = extractClaim(token, Claims::getSubject);
-            log.info("✅ Извлечен username: {}", username);
-            return username;
-        } catch (Exception e) {
-            log.error("❌ Ошибка при извлечении username из токена: {}", e.getMessage());
-            throw new RuntimeException(e);
-        }
+        String username = extractClaim(token, Claims::getSubject);
+        log.info("✅ Извлечен username: {}", username);
+        return username;
     }
 
     // Проверка валидности токена

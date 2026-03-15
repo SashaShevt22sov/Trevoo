@@ -4,6 +4,7 @@ import Zvonok.common.exception.customException.friendException.AlreadyFriendsExc
 import Zvonok.common.exception.customException.friendException.CannotAddYourselfAsFriendException;
 import Zvonok.common.exception.customException.friendException.FriendRequestAlreadySentException;
 import Zvonok.common.exception.customException.friendException.NoPermissionException;
+import Zvonok.common.exception.customException.jwtException.ExpiredJwtException;
 import Zvonok.common.exception.customException.jwtException.JwtGenerationException;
 import Zvonok.common.exception.customException.jwtException.JwtSecretException;
 import Zvonok.common.exception.customException.otpException.InvalidOtpCodeException;
@@ -110,7 +111,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleJwtSecretException(JwtSecretException ex) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), null, null);
     }
-
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<Map<String, Object>> handleExpiredJwt(ExpiredJwtException ex) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "AccessToken истек", null, null);
+    }
     @ExceptionHandler(RefreshTokenNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleRefreshTokenNotFoundException(RefreshTokenNotFoundException ex) {
         Map<String, String> extra = Map.of("code", "REFRESH_TOKEN_MISSING");

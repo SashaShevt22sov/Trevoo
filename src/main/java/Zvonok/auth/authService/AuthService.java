@@ -316,8 +316,6 @@ public class AuthService {
                 .accessToken(newAccessToken)
                 .avatarUrl(user.getAvatarUrl())
                 .build();
-
-
     }
 
     // =============================== ВЫХОД ИЗ АККАУНТА

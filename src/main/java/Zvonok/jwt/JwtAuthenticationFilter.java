@@ -1,6 +1,8 @@
 package Zvonok.jwt;
 
+import Zvonok.common.exception.customException.jwtException.ExpiredJwtException;
 import Zvonok.jwt.accessToken.JwtAccessTokenService;
+import Zvonok.userDetails.MyUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +26,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtAccessTokenService jwtAccessTokenService;
-    private final UserDetailsService userDetailsService;
+    private final MyUserDetailsService myUserDetailsService;
 
     @Override
     protected void doFilterInternal(
@@ -57,7 +59,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     log.info("   🔄 Пытаемся загрузить пользователя из БД: {}", username);
 
                     try {
-                        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                       UserDetails userDetails = myUserDetailsService.loadUserByUsername(username);
                         log.info("   ✅ Пользователь загружен из БД:");
                         log.info("      👤 Username: {}", userDetails.getUsername());
                         log.info("      🛡️ Роли: {}", userDetails.getAuthorities());
@@ -109,6 +111,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 SecurityContextHolder.getContext().getAuthentication().getName());
                     }
                 }
+            } catch (io.jsonwebtoken.ExpiredJwtException | ExpiredJwtException e) {
+                log.warn("⚠️ JWT истёк: {}", e.getMessage());
+
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\": \"JWT token has expired\"}");
+                response.getWriter().flush();
+
+                return;
 
             } catch (Exception e) {
                 log.error("❌ ОШИБКА ПРИ ОБРАБОТКЕ JWT ТОКЕНА");

@@ -34,6 +34,8 @@ public class AuthController {
         this.authService = authService;
     }
 
+
+    // ===============================  РЕГИСТРАЦИИ НОВОГО ПОЛЬЗОВАТЕЛЯ
     @Operation(
             summary = "Регистрация пользователя. Отправление кода подтверждения регистрации",
             description = "Отправление кода подтверждения регистрации"
@@ -48,6 +50,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.registerNewUser(registerRequestDto));
     }
 
+    // ===============================  ОТПРАВКА ОТП КОДА ДЛЯ ПОДТВЕРЖДЕНИЯ РЕГИСТРАЦИИ
     @Operation(
             summary = "Подтверждение почты",
             description = "Подтверждение почты и окончательная регистрация"
@@ -69,6 +72,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.resendNewOtp(resendOtpRequestDto));
     }
 
+    // ===============================  АВТОРИЗАЦИЯ
     @Operation(
             summary = "Получение токена",
             description = "Получение токена"
@@ -84,6 +88,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.loginUser(loginRequestDto, response));
     }
 
+    // ===============================  ОБНОВЛЕНИЕ ТОКЕНА(ВОССТАНОВЛЕНИЕ AUTH)
     @Operation(
             summary = "Обновление токена",
             description = "Обновление токена"
@@ -97,6 +102,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.refreshToken(request));
     }
 
+    // ===============================  ВЫХОД
     @Operation(
             summary = "Выход из аккаунта",
             description = "Выход из аккаунта"
@@ -111,7 +117,7 @@ public class AuthController {
     ) {
         return authService.logout(request, response);
     }
-
+    // ===============================  СБРОС ПАРОЛЯ ОТПРАВКА EMAIL
     @Operation(
             summary = "Восстановление пароля",
             description = "Отправка кода восстановления"

@@ -1,6 +1,6 @@
 package Zvonok.notification.notificationService;
 
-import Zvonok.common.exception.customException.userException.UserNotFoundException;
+
 import Zvonok.notification.NotificationType.NotificationType;
 import Zvonok.notification.entity.Notification;
 import Zvonok.notification.notificationDto.NotificationAllResponseDto;
@@ -9,15 +9,14 @@ import Zvonok.notification.notificationDto.WebSocketNotificationResponseDto;
 import Zvonok.notification.notificationRepository.NotificationRepository;
 import Zvonok.user.entity.User;
 import Zvonok.user.userRepository.UserRepository;
-import Zvonok.websocket.controller.WebSocketNotificationController;
+import Zvonok.websocket.notification.service.WebSocketNotificationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import javax.swing.text.html.Option;
+
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +24,7 @@ public class NotificationService {
 
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
-    private final WebSocketNotificationController webSocketNotificationController;
+    private final WebSocketNotificationService webSocketNotificationService;
 
 
     // =============================================== Создаю новое уведомление
@@ -51,7 +50,7 @@ public class NotificationService {
         response.setType(savedNotification.getType().name());
         response.setTypeWebSocket("NEW");
 
-        webSocketNotificationController.sendNotification(response, recipient.getUsername());
+        webSocketNotificationService.sendNotification(response, recipient.getUsername());
 
 
     }
@@ -101,6 +100,6 @@ public class NotificationService {
         WebSocketDeleteNotificationDto dtoDelete = new WebSocketDeleteNotificationDto();
         dtoDelete.setId(notif.getId());
         dtoDelete.setTypeWebSocket("DELETE");
-        webSocketNotificationController.sendDeleteNotification(dtoDelete, recipient.getUsername());
+        webSocketNotificationService.sendDeleteNotification(dtoDelete, recipient.getUsername());
     }
 }

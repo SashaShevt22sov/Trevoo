@@ -1,15 +1,15 @@
-package Zvonok.websocket.controller;
+package Zvonok.websocket.notification.service;
 
 
 import Zvonok.notification.notificationDto.WebSocketDeleteNotificationDto;
 import Zvonok.notification.notificationDto.WebSocketNotificationResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Service;
 
-@Controller
+@Service
 @RequiredArgsConstructor
-public class WebSocketNotificationController {
+public class WebSocketNotificationService {
 
     private final SimpMessagingTemplate messagingTemplate;
 
