@@ -18,7 +18,8 @@ import java.util.UUID;
 @Entity
 @Table(schema = "storage", name = "documents")
 @Data
-@NoArgsConstructor @AllArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @SQLRestriction("deleted_at IS NULL")
 public class Document {
@@ -45,7 +46,7 @@ public class Document {
     @Column(name = "deleted_at")
     private OffsetDateTime deletedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REFRESH)
     @JoinColumn(name = "rule_id")
     private DocumentAccessRule accessRule;
 
