@@ -12,6 +12,7 @@ import Zvonok.common.exception.customException.otpException.OtpAttemptsExceededE
 import Zvonok.common.exception.customException.otpException.TooManyRequestsException;
 import Zvonok.common.exception.customException.otpException.VerificationExpiredException;
 import Zvonok.common.exception.customException.refreshTokenException.RefreshTokenNotFoundException;
+import Zvonok.common.exception.customException.storageException.StorageAccessRuleNotFoundException;
 import Zvonok.common.exception.customException.userException.InvalidCredentialsException;
 import Zvonok.common.exception.customException.userException.InvalidPasswordException;
 import Zvonok.common.exception.customException.userException.UserAlreadyExistsException;
@@ -93,6 +94,7 @@ public class GlobalExceptionHandler {
 
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null, null);
     }
+
     @ExceptionHandler(NoPermissionException.class)
     public ResponseEntity<Map<String, Object>> handleNoPermissionException(
             NoPermissionException ex) {
@@ -140,17 +142,27 @@ public class GlobalExceptionHandler {
         );
     }
 
+    // ==================== ОБЩИЕ ХРАНИЛИЩА ====================
+
+    @ExceptionHandler(StorageAccessRuleNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleGlobalException(StorageAccessRuleNotFoundException ex) {
+
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(), null, null);
+    }
+
     // ==================== ОБЩИЕ ОШИБКИ ====================
 
-   @ExceptionHandler(Exception.class)
-  public ResponseEntity<Map<String, Object>> handleGlobalException(Exception ex) {
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<Map<String, Object>> handleGlobalException(Exception ex) {
+//
+//        return buildErrorResponse(
+//                HttpStatus.INTERNAL_SERVER_ERROR,
+//                "Произошла ошибка на сервере", null, null);
+//    }
 
-    return buildErrorResponse(
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            "Произошла ошибка на сервере",null,null);
-}
-
-// ==================== УТИЛИТЫ ====================
+    // ==================== УТИЛИТЫ ====================
 
     private ResponseEntity<Map<String, Object>> buildErrorResponse(
             HttpStatus status,
@@ -162,7 +174,10 @@ public class GlobalExceptionHandler {
         body.put("status", status.value());
         body.put("error", status.getReasonPhrase());
         body.put("message", message);
-        body.put("validationErrors", validationErrors);
+
+        if(validationErrors != null && !validationErrors.isEmpty()) {
+            body.put("validationErrors", validationErrors);
+        }
 
         if (extraFields != null) {
             body.putAll(extraFields);
