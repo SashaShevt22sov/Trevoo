@@ -1,30 +1,24 @@
 package Zvonok.minio.controller;
 
+import Zvonok.minio.dto.DocumentInfoResponseDto;
 import Zvonok.minio.dto.UploadFileDtoResponse;
 import Zvonok.minio.entity.AccessRule;
-import Zvonok.minio.repository.DocumentRepository;
 import Zvonok.minio.service.StorageService;
 import Zvonok.userDetails.MyUserDetails;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URLConnection;
-import java.security.Principal;
 import java.util.UUID;
-
-import static java.util.Objects.isNull;
 
 @RestController
 @RequestMapping("/api/v1/data")
@@ -40,7 +34,7 @@ public class MinioDataController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<UploadFileDtoResponse> uploadFile(
+    public ResponseEntity<UploadFileDtoResponse> uploadDocument(
             @RequestParam("file") MultipartFile file,
             @RequestParam("access") AccessRule accessRule,
             @AuthenticationPrincipal @Parameter(hidden = true) MyUserDetails currentUser
@@ -53,43 +47,41 @@ public class MinioDataController {
     }
 
     @GetMapping("/preview/{documentId}")
-    public ResponseEntity<Resource> previewFile(
+    public ResponseEntity<Resource> previewDocument(
             @PathVariable UUID documentId,
             @AuthenticationPrincipal @Parameter(hidden = true, required = true) MyUserDetails currentUser
     ) {
         var preview = storageService.previewDocument(documentId, currentUser);
 
         // Определяем MIME-тип по оригинальному имени файла
-        var contentType = URLConnection.guessContentTypeFromName(preview.originalName());
+        var contentType = URLConnection.guessContentTypeFromName(preview.getOriginalName());
         if (contentType == null) {
             contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
         }
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
-                .header("Content-Disposition", "inline; filename=\"" + preview.originalName() + "\"")
-                .body(preview.resource());
+                .header("Content-Disposition", "inline; filename=\"" + preview.getOriginalName() + "\"")
+                .body(preview.getResource());
     }
-//
-//    @GetMapping("/list")
-//    public ResponseEntity<List<String>> listFiles() {
-//        List<String> files = storageService.listFiles();
-//        return ResponseEntity.ok(files);
-//    }
-//
-//    @GetMapping("/download/{fileName}")
-//    public ResponseEntity<Resource> downloadFile(@PathVariable String fileName) {
-//        log.info("Получение файла {} c файлового хранилища", fileName);
-//        return storageService.downloadFile(fileName);
-//    }
-//
-//
-//    @DeleteMapping("/{fileName}")
-//    public ResponseEntity<String> deleteFile(@PathVariable String fileName) {
-//        log.info("Удаление файла {} c файлового хранилища", fileName);
-//        String response = storageService.deleteFile(fileName);
-//        log.info("Файл {} удалён с файлового хранилища", fileName);
-//        return ResponseEntity.ok(response);
-//    }
+
+    @GetMapping("/list")
+    public ResponseEntity<DocumentInfoResponseDto> listDocument(
+            @AuthenticationPrincipal MyUserDetails currentUser,
+            @RequestParam("filename") String expectedFilename
+    ) {
+        return ResponseEntity.ok(storageService.listDocument(expectedFilename, currentUser));
+    }
+
+
+    @DeleteMapping("/{documentId}")
+    public ResponseEntity<String> deleteDocument(
+            @PathVariable UUID documentId,
+            @AuthenticationPrincipal MyUserDetails currentUser) {
+        log.info("Удаление файла {} c файлового хранилища", documentId);
+        storageService.deleteDocument(documentId, currentUser);
+        log.info("Файл {} удалён с файлового хранилища", documentId);
+        return ResponseEntity.ok("Файл удалён с файлового хранилища");
+    }
 
 }

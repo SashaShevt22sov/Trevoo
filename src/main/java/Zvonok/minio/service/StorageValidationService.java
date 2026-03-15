@@ -20,33 +20,39 @@ public class StorageValidationService {
     private final DocumentAccessRuleRepository documentAccessRuleRepository;
 
 
-    public void validateUpdateRule(Document document, User currentUser){
-        if(document.getOwner().getId().equals(currentUser.getId())){
+    public void validateUpdateRule(Document document, User currentUser) {
+        if (document.getOwner().getId().equals(currentUser.getId())) {
             throw new StorageAccessDeniedException();
         }
     }
 
-    public void validatePreviewAccessDocument(Document document, MyUserDetails currentUser){
+    public void validatePreviewAccessDocument(Document document, MyUserDetails currentUser) {
         var allowedUser = document.getAllowedUsers();
         var user = currentUser == null ? null : currentUser.getUser();
         var owner = document.getOwner();
-        switch (document.getAccessRule().getAccessibilityRule()){
+        switch (document.getAccessRule().getAccessibilityRule()) {
             case PRIVATE -> {
-                if(user == null){
+                if (user == null) {
                     throw new StorageAccessDeniedException();
                 }
-                if(!owner.getId().equals(user.getId())){
+                if (!owner.getId().equals(user.getId())) {
                     throw new StorageAccessDeniedException();
                 }
             }
             case PERSONAL -> {
-                if(user == null){
+                if (user == null) {
                     throw new StorageAccessDeniedException();
                 }
-                if(!owner.getId().equals(user.getId()) && !allowedUser.contains(user)){
+                if (!owner.getId().equals(user.getId()) && !allowedUser.contains(user)) {
                     throw new StorageAccessDeniedException();
                 }
             }
-        };
+        }
+    }
+
+    public void validateDeleteAccessDocumet(Document document, MyUserDetails currentUser) {
+        if (document.getOwner().getId().equals(currentUser.getId())) {
+            throw new StorageAccessDeniedException();
+        }
     }
 }

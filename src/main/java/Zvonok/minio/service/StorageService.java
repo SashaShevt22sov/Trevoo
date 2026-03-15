@@ -2,7 +2,8 @@ package Zvonok.minio.service;
 
 import Zvonok.common.exception.customException.storageException.StorageAccessRuleNotFoundException;
 import Zvonok.common.exception.customException.storageException.StorageDocumentNotFoundException;
-import Zvonok.minio.dto.DocumentPreview;
+import Zvonok.minio.dto.DocumentInfoResponseDto;
+import Zvonok.minio.dto.DocumentPreviewResponseDto;
 import Zvonok.minio.dto.UploadFileDtoResponse;
 import Zvonok.minio.entity.AccessRule;
 import Zvonok.minio.entity.Document;
@@ -10,21 +11,15 @@ import Zvonok.minio.repository.DocumentAccessRuleRepository;
 import Zvonok.minio.repository.DocumentRepository;
 import Zvonok.user.userService.UserService;
 import Zvonok.userDetails.MyUserDetails;
-import io.minio.*;
-import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,7 +48,7 @@ public class StorageService {
                 });
 
         var document = Document.builder()
-                .documentName(String.join("", UUID.randomUUID().toString(), file.getOriginalFilename()))
+                .documentName(String.join("_", UUID.randomUUID().toString(), file.getOriginalFilename()))
                 .owner(currentUser.getUser())
                 .accessRule(accessRule)
                 .build();
@@ -96,7 +91,7 @@ public class StorageService {
         documentRepository.save(document);
     }
 
-    public DocumentPreview previewDocument(UUID documentId, MyUserDetails currentUser) {
+    public DocumentPreviewResponseDto previewDocument(UUID documentId, MyUserDetails currentUser) {
         var document = documentRepository.findById(documentId)
                 .orElseThrow(() -> {
                     var err = new StorageDocumentNotFoundException(documentId.toString());
@@ -107,23 +102,44 @@ public class StorageService {
         validationService.validatePreviewAccessDocument(document, currentUser);
 
         var resource = previewFile(document.getDocumentName());
-        return new DocumentPreview(resource, document.getDocumentName());
+        return new DocumentPreviewResponseDto(resource, document.getDocumentName());
+    }
+
+    public void deleteDocument(UUID documentId, MyUserDetails currentUser) {
+        var document = documentRepository.findById(documentId)
+                .orElseThrow(() -> {
+                    var err = new StorageDocumentNotFoundException(documentId.toString());
+                    log.warn(err.getMessage());
+                    return err;
+                });
+
+        validationService.validateDeleteAccessDocumet(document, currentUser);
+
+        deleteFile(document.getDocumentName());
+    }
+
+    public DocumentInfoResponseDto listDocument(String q, MyUserDetails currentUser) {
+        var documents = documentRepository.findDocumentsByOwnerAndDocumentNameLikeIgnoreCase(currentUser.getUser(), q)
+                .stream()
+                .map(document -> DocumentInfoResponseDto.DocumentInfo.of(
+                        document.getId(),
+                        document.getDocumentName(),
+                        document.getCreatedAt(),
+                        "Пока не готово"
+                )).toList();
+
+        return DocumentInfoResponseDto.builder()
+                .owner(currentUser.getUser().getId())
+                .documents(documents)
+                .count((long) documents.size())
+                .build();
     }
 
     /**
      * Проверяет, существует ли дефолтный бакет. Если нет - создает его.
      */
     private void createBucketIfNotExists() {
-        createBucketIfNotExists(defaultBucket);
-    }
-
-    /**
-     * Проверяет, существует ли бакет. Если нет - создает его.
-     *
-     * @param bucketName - наименование проверяемого/создаваемого бакета
-     */
-    private void createBucketIfNotExists(String bucketName) {
-        storageService.createBucketIfNotExists(bucketName);
+        storageService.createBucketIfNotExists(defaultBucket);
     }
 
     /**
@@ -134,11 +150,7 @@ public class StorageService {
      * @return сообщение об успехе
      */
     private String uploadFile(MultipartFile file, String fileName) {
-        return uploadFile(defaultBucket, file, fileName);
-    }
-
-    private String uploadFile(String bucketName, MultipartFile file, String fileName) {
-        return storageService.uploadFile(bucketName,file,fileName);
+        return storageService.uploadFile(defaultBucket, file, fileName);
     }
 
     /**
@@ -146,13 +158,8 @@ public class StorageService {
      *
      */
     private List<String> listFiles() {
-        return listFiles(defaultBucket);
+        return storageService.listFiles(defaultBucket);
     }
-
-    private List<String> listFiles(String bucketName) {
-        return storageService.listFiles(bucketName);
-    }
-
 
     /**
      * Скачивает файл из дефолтного бакета MinIO.
@@ -161,26 +168,17 @@ public class StorageService {
      * @return ResponseEntity с ресурсом файла
      */
     private ResponseEntity<Resource> downloadFile(String fileName) {
-        return downloadFile(defaultBucket, fileName);
+        return storageService.downloadFile(defaultBucket, fileName);
     }
 
     /**
-     * Скачивает файл из MinIO.
+     * Удаляет файл из дефолтного бакета минио
      *
-     * @param bucketName - наименование бакета в который загружаем
-     * @param fileName   - имя файла для скачивания
-     * @return ResponseEntity с ресурсом файла
+     * @param fileName наименование файла
+     * @return отчет об операции
      */
-    private ResponseEntity<Resource> downloadFile(String bucketName, String fileName) {
-        return storageService.downloadFile(bucketName,fileName);
-    }
-
     private String deleteFile(String fileName) {
-        return deleteFile(defaultBucket, fileName);
-    }
-
-    private String deleteFile(String bucketName, String fileName) {
-        return storageService.deleteFile(bucketName,fileName);
+        return storageService.deleteFile(defaultBucket, fileName);
     }
 
     /**
@@ -191,10 +189,7 @@ public class StorageService {
      * @return ResponseEntity с содержимым файла
      */
     private Resource previewFile(String fileName) {
-        return previewFile(defaultBucket, fileName);
+        return storageService.previewFile(defaultBucket, fileName);
     }
 
-    private Resource previewFile(String bucketName, String fileName) {
-        return storageService.previewFile(bucketName,fileName);
-    }
 }
