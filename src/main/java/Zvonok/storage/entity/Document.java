@@ -1,4 +1,4 @@
-package Zvonok.minio.entity;
+package Zvonok.storage.entity;
 
 import Zvonok.user.entity.User;
 import jakarta.persistence.*;

@@ -1,9 +1,9 @@
-package Zvonok.minio.controller;
+package Zvonok.storage.controller;
 
-import Zvonok.minio.dto.DocumentInfoResponseDto;
-import Zvonok.minio.dto.UploadFileDtoResponse;
-import Zvonok.minio.entity.AccessRule;
-import Zvonok.minio.service.StorageService;
+import Zvonok.storage.dto.DocumentInfoResponseDto;
+import Zvonok.storage.dto.UploadFileDtoResponse;
+import Zvonok.storage.entity.AccessRule;
+import Zvonok.storage.service.StorageService;
 import Zvonok.userDetails.MyUserDetails;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.annotation.PostConstruct;
@@ -21,17 +21,12 @@ import java.net.URLConnection;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/data")
+@RequestMapping("/api/v1/storage")
 @RequiredArgsConstructor
 @Log4j2
-public class MinioDataController {
+public class StorageDataController {
 
     private final StorageService storageService;
-
-    @PostConstruct
-    void postInit() {
-        log.info("api storage in used");
-    }
 
     @PostMapping("/upload")
     public ResponseEntity<UploadFileDtoResponse> uploadDocument(
@@ -67,10 +62,12 @@ public class MinioDataController {
 
     @GetMapping("/list")
     public ResponseEntity<DocumentInfoResponseDto> listDocument(
-            @AuthenticationPrincipal MyUserDetails currentUser,
-            @RequestParam("filename") String expectedFilename
+            @RequestParam(value = "filename", required = false) String expectedFilename,
+            @AuthenticationPrincipal MyUserDetails currentUser
     ) {
-        return ResponseEntity.ok(storageService.listDocument(expectedFilename, currentUser));
+        var response = storageService.listDocument(expectedFilename, currentUser);
+
+        return ResponseEntity.ok(response);
     }
 
 

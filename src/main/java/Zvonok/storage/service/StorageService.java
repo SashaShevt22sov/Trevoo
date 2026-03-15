@@ -1,14 +1,15 @@
-package Zvonok.minio.service;
+package Zvonok.storage.service;
 
 import Zvonok.common.exception.customException.storageException.StorageAccessRuleNotFoundException;
 import Zvonok.common.exception.customException.storageException.StorageDocumentNotFoundException;
-import Zvonok.minio.dto.DocumentInfoResponseDto;
-import Zvonok.minio.dto.DocumentPreviewResponseDto;
-import Zvonok.minio.dto.UploadFileDtoResponse;
-import Zvonok.minio.entity.AccessRule;
-import Zvonok.minio.entity.Document;
-import Zvonok.minio.repository.DocumentAccessRuleRepository;
-import Zvonok.minio.repository.DocumentRepository;
+import Zvonok.storage.dto.DocumentInfoResponseDto;
+import Zvonok.storage.dto.DocumentPreviewResponseDto;
+import Zvonok.storage.dto.UploadFileDtoResponse;
+import Zvonok.storage.entity.AccessRule;
+import Zvonok.storage.entity.Document;
+import Zvonok.storage.repository.DocumentAccessRuleRepository;
+import Zvonok.storage.repository.DocumentRepository;
+import Zvonok.user.entity.User;
 import Zvonok.user.userService.UserService;
 import Zvonok.userDetails.MyUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -22,8 +23,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-import static Zvonok.minio.entity.AccessRule.PERSONAL;
+import static Zvonok.storage.entity.AccessRule.PERSONAL;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +39,26 @@ public class StorageService {
 
     @Value("${spring.minio-client.default-bucket-name}")
     private String defaultBucket;
+
+    public List<Long> getAccessByDocumentUserIds(UUID documentId, MyUserDetails currentUser){
+        var document = documentRepository.findById(documentId)
+                .orElseThrow(() -> {
+                    var err = new StorageDocumentNotFoundException(documentId.toString());
+                    log.warn(err.getMessage());
+                    return err;
+                });
+
+        validationService.validateUpdateRule(document,currentUser);
+
+        var accessDocumentUserIds = document.getAllowedUsers()
+                .stream()
+                .map(User::getId)
+                .filter(id -> !id.equals(document.getOwner().getId()))
+                .collect(Collectors.toList());
+        accessDocumentUserIds.add(currentUser.getId());
+
+        return accessDocumentUserIds;
+    }
 
     @Transactional
     public UploadFileDtoResponse uploadFile(MultipartFile file, MyUserDetails currentUser, AccessRule access) {
@@ -72,7 +94,7 @@ public class StorageService {
                     return err;
                 });
 
-        validationService.validateUpdateRule(document, currentUser.getUser());
+        validationService.validateUpdateRule(document, currentUser);
 
         var newAccessRule = documentAccessRuleRepository.findDocumentAccessRuleByAccessibilityRule(accessRule)
                 .orElseThrow(() -> {
@@ -105,6 +127,7 @@ public class StorageService {
         return new DocumentPreviewResponseDto(resource, document.getDocumentName());
     }
 
+    @Transactional
     public void deleteDocument(UUID documentId, MyUserDetails currentUser) {
         var document = documentRepository.findById(documentId)
                 .orElseThrow(() -> {
@@ -115,18 +138,26 @@ public class StorageService {
 
         validationService.validateDeleteAccessDocumet(document, currentUser);
 
+
+        documentRepository.delete(document);
         deleteFile(document.getDocumentName());
     }
 
     public DocumentInfoResponseDto listDocument(String q, MyUserDetails currentUser) {
-        var documents = documentRepository.findDocumentsByOwnerAndDocumentNameLikeIgnoreCase(currentUser.getUser(), q)
+
+        q = String.join("%","",q,"");
+        if(q == null){
+            q = "%";
+        }
+        var documents = documentRepository.findDocumentsByOwnerIdAndDocumentNameLikeIgnoreCase(currentUser.getUser().getId(), q)
                 .stream()
                 .map(document -> DocumentInfoResponseDto.DocumentInfo.of(
                         document.getId(),
-                        document.getDocumentName(),
+                        document.getDocumentName().substring(37),
                         document.getCreatedAt(),
                         "Пока не готово"
-                )).toList();
+                ))
+                .toList();
 
         return DocumentInfoResponseDto.builder()
                 .owner(currentUser.getUser().getId())

@@ -1,4 +1,4 @@
-package Zvonok.minio.service;
+package Zvonok.storage.service;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;

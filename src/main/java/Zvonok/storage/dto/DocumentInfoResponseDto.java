@@ -1,4 +1,4 @@
-package Zvonok.minio.dto;
+package Zvonok.storage.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +21,7 @@ public class DocumentInfoResponseDto {
 
 
     @AllArgsConstructor(staticName = "of")
+    @Data
     public static class DocumentInfo {
         private UUID documentId;
         private String documentName;
