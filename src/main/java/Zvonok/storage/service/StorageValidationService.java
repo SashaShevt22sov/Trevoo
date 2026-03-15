@@ -1,10 +1,7 @@
-package Zvonok.minio.service;
+package Zvonok.storage.service;
 
 import Zvonok.common.exception.customException.storageException.StorageAccessDeniedException;
-import Zvonok.common.exception.customException.storageException.StorageDocumentNotFoundException;
-import Zvonok.minio.entity.Document;
-import Zvonok.minio.repository.DocumentAccessRuleRepository;
-import Zvonok.minio.repository.DocumentRepository;
+import Zvonok.storage.entity.Document;
 import Zvonok.user.entity.User;
 import Zvonok.userDetails.MyUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -16,12 +13,8 @@ import org.springframework.stereotype.Service;
 @Log4j2
 public class StorageValidationService {
 
-    private final DocumentRepository documentRepository;
-    private final DocumentAccessRuleRepository documentAccessRuleRepository;
-
-
-    public void validateUpdateRule(Document document, User currentUser) {
-        if (document.getOwner().getId().equals(currentUser.getId())) {
+    public void validateUpdateRule(Document document, MyUserDetails currentUser) {
+        if (!document.getOwner().getId().equals(currentUser.getId())) {
             throw new StorageAccessDeniedException();
         }
     }
@@ -51,7 +44,7 @@ public class StorageValidationService {
     }
 
     public void validateDeleteAccessDocumet(Document document, MyUserDetails currentUser) {
-        if (document.getOwner().getId().equals(currentUser.getId())) {
+        if (!document.getOwner().getId().equals(currentUser.getId())) {
             throw new StorageAccessDeniedException();
         }
     }

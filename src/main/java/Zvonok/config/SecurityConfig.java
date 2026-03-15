@@ -74,7 +74,7 @@ public class SecurityConfig {
                 "/topic/**",
                 "/swagger-ui/**",
                 "/v3/**",
-                "/api/v1/data/preview/*"
+                "/api/v1/storage/preview/*"
         };
     }
 }

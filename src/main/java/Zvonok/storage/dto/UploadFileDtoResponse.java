@@ -1,4 +1,4 @@
-package Zvonok.minio.dto;
+package Zvonok.storage.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

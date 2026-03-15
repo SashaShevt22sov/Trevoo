@@ -1,4 +1,4 @@
-package Zvonok.minio.service;
+package Zvonok.storage.service;
 
 import io.minio.*;
 import io.minio.messages.Item;

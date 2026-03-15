@@ -1,4 +1,4 @@
-package Zvonok.minio.entity;
+package Zvonok.storage.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
