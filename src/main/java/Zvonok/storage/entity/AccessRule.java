@@ -1,4 +1,4 @@
-package Zvonok.minio.entity;
+package Zvonok.storage.entity;
 
 public enum AccessRule {
     PUBLIC,

@@ -2,7 +2,7 @@ package Zvonok.user.entity;
 
 import Zvonok.friendShip.entity.FriendShip;
 import Zvonok.common.Enum.Role;
-import Zvonok.minio.entity.Document;
+import Zvonok.storage.entity.Document;
 import jakarta.persistence.*;
 import lombok.*;
 

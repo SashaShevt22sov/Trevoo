@@ -1,7 +1,7 @@
-package Zvonok.minio.repository;
+package Zvonok.storage.repository;
 
-import Zvonok.minio.entity.AccessRule;
-import Zvonok.minio.entity.DocumentAccessRule;
+import Zvonok.storage.entity.AccessRule;
+import Zvonok.storage.entity.DocumentAccessRule;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
