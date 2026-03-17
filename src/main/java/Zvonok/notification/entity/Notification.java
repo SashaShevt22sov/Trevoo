@@ -1,6 +1,6 @@
 package Zvonok.notification.entity;
 
-import Zvonok.notification.NotificationType.NotificationType;
+import Zvonok.notification.notificationType.NotificationType;
 import Zvonok.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

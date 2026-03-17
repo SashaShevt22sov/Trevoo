@@ -35,6 +35,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -51,6 +52,8 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
+
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -70,6 +73,8 @@ public class AuthService {
     private static final int RESEND_COOLDOWN_SECONDS = 60;
     private static final int MAX_RESEND_ATTEMPTS = 5;
 
+    @Value("${spring.storage.default-avatar}")
+    private  String DEFAULT_URL_AVATAR;
 
     // =============================== РЕГИСТРАЦИЯ
 
@@ -183,7 +188,7 @@ public class AuthService {
                 .roles(Set.of(Role.ROLE_USER))
                 .createdAt(LocalDateTime.now())
                 .registerVerify(true)
-                .avatarUrl("http://localhost:8080/avatars/default-avatar.png")
+                .avatarUrl(DEFAULT_URL_AVATAR)
                 .build();
 
         User savedUser = userRepository.save(newUser);

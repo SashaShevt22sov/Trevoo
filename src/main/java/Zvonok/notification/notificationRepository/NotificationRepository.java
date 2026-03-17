@@ -1,6 +1,6 @@
 package Zvonok.notification.notificationRepository;
 
-import Zvonok.notification.NotificationType.NotificationType;
+import Zvonok.notification.notificationType.NotificationType;
 import Zvonok.notification.entity.Notification;
 import Zvonok.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -47,7 +48,7 @@ public class FriendShipController {
     })
     @PostMapping("/add")
     public ResponseEntity<ApiResponse> addFriend(
-            @RequestBody @Parameter(description = "username добавляемого пользователя") FriendShipAddRequest request,
+           @Valid @RequestBody @Parameter(description = "username добавляемого пользователя") FriendShipAddRequest request,
             @AuthenticationPrincipal @Parameter(hidden = true) MyUserDetails currentUser) {
 
         Long userId = currentUser.getId();

@@ -36,7 +36,7 @@ public class WebSocketStatusListener {
 
             log.info("✅ User connected: {}", username);
 
-            // ⚡ Отправка ONLINE с небольшой задержкой
+            // Отправка ONLINE с небольшой задержкой
             taskScheduler.schedule(
                     () -> {
                         // проверяем, что пользователь всё ещё онлайн перед отправкой
@@ -45,7 +45,7 @@ public class WebSocketStatusListener {
                             log.info("📢 Отправлено ONLINE пользователю {} после задержки", username);
                         }
                     },
-                    Instant.now().plusMillis(100) // задержка 100ms
+                    Instant.now().plusMillis(100)
             );
         }
 

@@ -3,6 +3,7 @@ package Zvonok.friendShip.FriendShipService;
 import Zvonok.common.exception.customException.friendException.CannotAddYourselfAsFriendException;
 import Zvonok.common.exception.customException.friendException.FriendRequestAlreadySentException;
 import Zvonok.common.exception.customException.friendException.NoPermissionException;
+import Zvonok.common.exception.customException.friendException.TooManyPendingRequestsException;
 import Zvonok.common.exception.customException.userException.UserNotFoundException;
 import Zvonok.friendShip.FriendShipDto.FriendShipInfo;
 import Zvonok.friendShip.FriendShipRepository.FriendShipRepository;
@@ -13,6 +14,7 @@ import Zvonok.user.entity.User;
 import Zvonok.user.userRepository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,9 @@ import static java.time.LocalDateTime.now;
 @Service
 @RequiredArgsConstructor
 public class FriendShipService {
+    @Value("${spring.friends.maxPendingRequest}")
+    private int maxPendingRequests;
+
 
     private final UserRepository userRepository;
     private final FriendShipRepository friendShipRepository;
@@ -51,6 +56,15 @@ public class FriendShipService {
             if (existing.get().getStatus() == FriendShipType.ACCEPTED) {
                 throw new FriendRequestAlreadySentException("Вы уже в друзьях");
             }
+        }
+
+
+        // ======= ПОДСЧЁТ И ОГРАНИЧЕНИЕ =======
+        long pendingCount = friendShipRepository.countPendingByUser(user);
+        if (pendingCount >= maxPendingRequests) {
+            throw new TooManyPendingRequestsException(
+                    "Вы достигли лимита исходящих заявок (максимум 10)"
+            );
         }
 
         FriendShip fs = FriendShip.builder()
@@ -97,7 +111,6 @@ public class FriendShipService {
         notificationService.deleteNotification(userSender, friendRecipient);
         return "Заявка успешно отменена";
     }
-
 
 
     // ========================================================= Принятие заявки в друзья

@@ -1,7 +1,7 @@
 package Zvonok.notification.notificationService;
 
 
-import Zvonok.notification.NotificationType.NotificationType;
+import Zvonok.notification.notificationType.NotificationType;
 import Zvonok.notification.entity.Notification;
 import Zvonok.notification.notificationDto.NotificationAllResponseDto;
 import Zvonok.notification.notificationDto.WebSocketDeleteNotificationDto;

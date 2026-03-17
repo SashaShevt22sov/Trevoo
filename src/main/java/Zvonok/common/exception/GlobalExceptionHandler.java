@@ -1,9 +1,6 @@
 package Zvonok.common.exception;
 
-import Zvonok.common.exception.customException.friendException.AlreadyFriendsException;
-import Zvonok.common.exception.customException.friendException.CannotAddYourselfAsFriendException;
-import Zvonok.common.exception.customException.friendException.FriendRequestAlreadySentException;
-import Zvonok.common.exception.customException.friendException.NoPermissionException;
+import Zvonok.common.exception.customException.friendException.*;
 import Zvonok.common.exception.customException.jwtException.ExpiredJwtException;
 import Zvonok.common.exception.customException.jwtException.JwtGenerationException;
 import Zvonok.common.exception.customException.jwtException.JwtSecretException;
@@ -102,6 +99,12 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null, null);
     }
 
+    @ExceptionHandler(TooManyPendingRequestsException.class)
+    public ResponseEntity<Map<String, Object>> handleTooManyPendingRequestsException(
+            TooManyRequestsException ex) {
+
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null, null);
+    }
     // ==================== JWT ОШИБКИ ====================
 
     @ExceptionHandler(JwtGenerationException.class)
@@ -113,10 +116,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleJwtSecretException(JwtSecretException ex) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), null, null);
     }
+
     @ExceptionHandler(ExpiredJwtException.class)
     public ResponseEntity<Map<String, Object>> handleExpiredJwt(ExpiredJwtException ex) {
         return buildErrorResponse(HttpStatus.UNAUTHORIZED, "AccessToken истек", null, null);
     }
+
     @ExceptionHandler(RefreshTokenNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleRefreshTokenNotFoundException(RefreshTokenNotFoundException ex) {
         Map<String, String> extra = Map.of("code", "REFRESH_TOKEN_MISSING");
@@ -175,7 +180,7 @@ public class GlobalExceptionHandler {
         body.put("error", status.getReasonPhrase());
         body.put("message", message);
 
-        if(validationErrors != null && !validationErrors.isEmpty()) {
+        if (validationErrors != null && !validationErrors.isEmpty()) {
             body.put("validationErrors", validationErrors);
         }
 

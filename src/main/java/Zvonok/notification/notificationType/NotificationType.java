@@ -1,4 +1,4 @@
-package Zvonok.notification.NotificationType;
+package Zvonok.notification.notificationType;
 
 public enum NotificationType {
 
