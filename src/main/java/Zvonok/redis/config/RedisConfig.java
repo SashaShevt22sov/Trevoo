@@ -1,4 +1,4 @@
-package Zvonok.redis;
+package Zvonok.redis.config;
 
 
 import org.springframework.context.annotation.Bean;

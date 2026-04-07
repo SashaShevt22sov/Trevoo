@@ -1,11 +1,10 @@
-package Zvonok.redis;
+package Zvonok.redis.redisService;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -22,7 +21,6 @@ public class RedisService {
 
 
     // String → Object
-
 
     public void set(String key, Object value, long ttlSeconds) {
         redisTemplate.opsForValue().set(key, value, Duration.ofSeconds(ttlSeconds));
@@ -43,9 +41,9 @@ public class RedisService {
 
     // String → String
 
-
     public void setString(String key, String value, long ttlSeconds) {
-        stringRedisTemplate.opsForValue().set(key, value, ttlSeconds, TimeUnit.SECONDS);
+      stringRedisTemplate.opsForValue().set(key, value, ttlSeconds, TimeUnit.SECONDS);
+
     }
 
     public String getString(String key) {

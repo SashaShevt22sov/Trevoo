@@ -1,7 +1,7 @@
 package Zvonok.websocket.interceptor;
 
-import Zvonok.jwt.accessToken.JwtAccessTokenService;
-import Zvonok.userDetails.MyUserDetailsService;
+import Zvonok.auth.jwt.accessToken.JwtAccessTokenService;
+import Zvonok.auth.userDetails.MyUserDetailsService;
 
 import Zvonok.websocket.store.WebSocketConnectionStore;
 import lombok.RequiredArgsConstructor;

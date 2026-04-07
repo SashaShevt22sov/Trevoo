@@ -11,7 +11,7 @@ import Zvonok.storage.repository.DocumentAccessRuleRepository;
 import Zvonok.storage.repository.DocumentRepository;
 import Zvonok.user.entity.User;
 import Zvonok.user.userService.UserService;
-import Zvonok.userDetails.MyUserDetails;
+import Zvonok.auth.userDetails.MyUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;

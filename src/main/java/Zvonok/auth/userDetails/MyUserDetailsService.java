@@ -1,4 +1,4 @@
-package Zvonok.userDetails;
+package Zvonok.auth.userDetails;
 
 import Zvonok.user.entity.User;
 import Zvonok.user.userRepository.UserRepository;

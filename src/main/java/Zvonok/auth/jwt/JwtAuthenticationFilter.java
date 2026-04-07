@@ -1,8 +1,10 @@
-package Zvonok.jwt;
+package Zvonok.auth.jwt;
 
 import Zvonok.common.exception.customException.jwtException.ExpiredJwtException;
-import Zvonok.jwt.accessToken.JwtAccessTokenService;
-import Zvonok.userDetails.MyUserDetailsService;
+import Zvonok.auth.jwt.accessToken.JwtAccessTokenService;
+import Zvonok.user.entity.User;
+import Zvonok.auth.userDetails.MyUserDetails;
+import Zvonok.auth.userDetails.MyUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -72,9 +73,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         if (isValid) {
                             log.info("   ✅ ТОКЕН ВАЛИДЕН! Устанавливаем аутентификацию в SecurityContext");
 
+                            User user = ((MyUserDetails) userDetails).getUser();
                             UsernamePasswordAuthenticationToken authToken =
                                     new UsernamePasswordAuthenticationToken(
-                                            userDetails,
+                                            user,
                                             null,
                                             userDetails.getAuthorities()
                                     );

@@ -3,7 +3,7 @@ package Zvonok.server.serverController;
 import Zvonok.server.serverDto.CreateServerRequestDto;
 import Zvonok.server.serverDto.ServerResponseDto;
 import Zvonok.server.serverService.ServerService;
-import Zvonok.userDetails.MyUserDetails;
+import Zvonok.user.entity.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -39,7 +39,7 @@ public class ServerController {
     @PostMapping("/create")
     public ResponseEntity<ServerResponseDto> createServer(
             @RequestBody @Valid CreateServerRequestDto request,
-            @AuthenticationPrincipal MyUserDetails userDetails) {
+            @AuthenticationPrincipal User userDetails) {
 
             Long userId = userDetails.getId();
             String username = userDetails.getUsername();

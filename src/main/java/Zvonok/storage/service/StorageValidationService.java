@@ -2,8 +2,7 @@ package Zvonok.storage.service;
 
 import Zvonok.common.exception.customException.storageException.StorageAccessDeniedException;
 import Zvonok.storage.entity.Document;
-import Zvonok.user.entity.User;
-import Zvonok.userDetails.MyUserDetails;
+import Zvonok.auth.userDetails.MyUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;

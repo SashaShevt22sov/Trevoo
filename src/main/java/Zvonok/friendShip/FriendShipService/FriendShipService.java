@@ -148,6 +148,7 @@ public class FriendShipService {
                 .findAllByUserAndStatus(user, FriendShipType.PENDING)
                 .stream()
                 .map(fs -> new FriendShipInfo(
+                        fs.getFriend().getId(),
                         fs.getFriend().getUsername(),
                         fs.getStatus(),
                         fs.getCreatedAt()
@@ -165,6 +166,7 @@ public class FriendShipService {
                 .map(fs -> {
                     User friend = fs.getUser().equals(user) ? fs.getFriend() : fs.getUser();
                     return new FriendShipInfo(
+                            fs.getFriend().getId(),
                             friend.getUsername(),
                             fs.getStatus(),
                             fs.getCreatedAt()

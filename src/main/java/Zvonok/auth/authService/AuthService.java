@@ -19,16 +19,16 @@ import Zvonok.common.exception.customException.refreshTokenException.RefreshToke
 import Zvonok.common.exception.customException.userException.InvalidCredentialsException;
 import Zvonok.common.exception.customException.userException.UserAlreadyExistsException;
 import Zvonok.common.exception.customException.otpException.VerificationExpiredException;
-import Zvonok.common.successrResponse.SuccessResponse;
+import Zvonok.common.exception.customException.userException.UserNotFoundException;
 import Zvonok.email.EmailService;
-import Zvonok.jwt.accessToken.JwtAccessTokenService;
-import Zvonok.jwt.refreshToken.entity.RefreshToken;
-import Zvonok.jwt.refreshToken.refreshTokenService.RefreshTokenService;
+import Zvonok.auth.jwt.accessToken.JwtAccessTokenService;
+
+import Zvonok.auth.jwt.refreshToken.refreshTokenService.RefreshTokenService;
 import Zvonok.otp.OtpService;
 import Zvonok.passwordResetToken.entity.PasswordResetToken;
 import Zvonok.passwordResetToken.passwordResetRepository.PasswordResetTokenRepository;
 import Zvonok.passwordResetToken.passwordResetService.PasswordResetTokenService;
-import Zvonok.redis.RedisService;
+import Zvonok.redis.redisService.RedisService;
 import Zvonok.user.entity.User;
 import Zvonok.user.userRepository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -54,7 +54,6 @@ import java.util.UUID;
 public class AuthService {
 
 
-
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final OtpService otpService;
@@ -74,7 +73,7 @@ public class AuthService {
     private static final int MAX_RESEND_ATTEMPTS = 5;
 
     @Value("${spring.storage.default-avatar}")
-    private  String DEFAULT_URL_AVATAR;
+    private String DEFAULT_URL_AVATAR;
 
     // =============================== РЕГИСТРАЦИЯ
 
@@ -199,7 +198,8 @@ public class AuthService {
         redisService.delete(PENDING_EMAIL_KEY + regData.getEmail());
 
         String accessToken = jwtAccessTokenService.generateAccessToken(savedUser);
-        refreshTokenService.createRefreshToken(savedUser, response);
+        String newRefreshToken = refreshTokenService.createRefreshToken(savedUser, response);
+        refreshTokenService.setRefreshTokenCookie(response, newRefreshToken);
 
         return RegisterResponseDto.builder()
                 .username(savedUser.getUsername())
@@ -293,7 +293,8 @@ public class AuthService {
 
 
         String accessToken = jwtAccessTokenService.generateAccessToken(user);
-        refreshTokenService.createRefreshToken(user, response);
+        String newRefreshToken = refreshTokenService.createRefreshToken(user, response);
+        refreshTokenService.setRefreshTokenCookie(response, newRefreshToken);
 
         log.info("Успешный вход: {}", email);
 
@@ -304,24 +305,6 @@ public class AuthService {
                 .build();
     }
 
-    // =============================== ВОССТАНОВЛЕНИЯ АВТОРИЗАЦИИ
-
-    public TokenRefreshResponseDto refreshToken(HttpServletRequest request) {
-        log.info("Refresh service : {}", Thread.currentThread());
-        String refreshToken = refreshTokenService.extractRefreshTokenFromRequest(request)
-                .orElseThrow(() -> new RefreshTokenNotFoundException("Refresh token обязателен"));
-
-        RefreshToken validateRefreshToken = refreshTokenService.validateRefreshToken(refreshToken);
-
-        User user = validateRefreshToken.getUser();
-        String newAccessToken = jwtAccessTokenService.generateAccessToken(user);
-
-        return TokenRefreshResponseDto.builder()
-                .username(user.getUsername())
-                .accessToken(newAccessToken)
-                .avatarUrl(user.getAvatarUrl())
-                .build();
-    }
 
     // =============================== ВЫХОД ИЗ АККАУНТА
 
@@ -432,8 +415,30 @@ public class AuthService {
 
         return ConfirmResetPasswordResponseDto.builder()
                 .success(true)
-                .message("Пароль успешно обновлен")
+                .message("Пароль успешно обновлен. Все активные сессии завершены.")
                 .build();
     }
 
+    // =============================== ВОССТАНОВЛЕНИЯ АВТОРИЗАЦИИ
+
+    public TokenRefreshResponseDto refreshToken(HttpServletRequest request, HttpServletResponse response) {
+        log.info("Refresh сервис : {}", Thread.currentThread());
+        String refreshToken = refreshTokenService.extractRefreshTokenFromRequest(request)
+                .orElseThrow(() -> new RefreshTokenNotFoundException("Refresh token обязателен"));
+
+        Long userId = refreshTokenService.validateRefreshToken(refreshToken);
+
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
+
+        String newRefreshToken = refreshTokenService.rotateRefreshToken(refreshToken, user, response);
+
+        String newAccessToken = jwtAccessTokenService.generateAccessToken(user);
+        refreshTokenService.setRefreshTokenCookie(response, newRefreshToken);
+
+        return TokenRefreshResponseDto.builder()
+                .username(user.getUsername())
+                .accessToken(newAccessToken)
+                .avatarUrl(user.getAvatarUrl())
+                .build();
+    }
 }

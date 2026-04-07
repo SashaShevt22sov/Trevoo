@@ -88,19 +88,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.loginUser(loginRequestDto, response));
     }
 
-    // ===============================  ОБНОВЛЕНИЕ ТОКЕНА(ВОССТАНОВЛЕНИЕ AUTH)
-    @Operation(
-            summary = "Обновление токена",
-            description = "Обновление токена"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Токен успешно обновлен"),
-            @ApiResponse(responseCode = "401", description = "Refresh token обязателен")
-    })
-    @PostMapping("/refresh")
-    public ResponseEntity<TokenRefreshResponseDto> refresh(HttpServletRequest request) {
-        return ResponseEntity.ok(authService.refreshToken(request));
-    }
+
 
     // ===============================  ВЫХОД
     @Operation(
@@ -138,6 +126,20 @@ public class AuthController {
         ConfirmResetPasswordResponseDto response = authService.confirmResetPassword(request);
 
         return ResponseEntity.ok(response);
+    }
+
+    // ===============================  ОБНОВЛЕНИЕ ТОКЕНА(ВОССТАНОВЛЕНИЕ AUTH)
+    @Operation(
+            summary = "Обновление токена",
+            description = "Обновление токена"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Токен успешно обновлен"),
+            @ApiResponse(responseCode = "401", description = "Refresh token обязателен")
+    })
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenRefreshResponseDto> refresh(HttpServletRequest request ,HttpServletResponse response) {
+        return ResponseEntity.ok(authService.refreshToken(request,response));
     }
 
 }

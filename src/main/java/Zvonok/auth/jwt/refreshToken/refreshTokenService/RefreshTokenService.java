@@ -1,12 +1,13 @@
-package Zvonok.jwt.refreshToken.refreshTokenService;
+package Zvonok.auth.jwt.refreshToken.refreshTokenService;
 
-import Zvonok.common.exception.customException.userException.InvalidPasswordException;
+import Zvonok.common.exception.customException.refreshTokenException.RefreshTokenInvalid;
+import Zvonok.common.exception.customException.refreshTokenException.RefreshTokenNotFoundException;
+
 import Zvonok.common.exception.customException.userException.UserAlreadyExistsException;
 import Zvonok.common.exception.customException.userException.UserNotFoundException;
-import Zvonok.jwt.accessToken.JwtAccessTokenService;
-import Zvonok.jwt.refreshToken.entity.RefreshToken;
-import Zvonok.jwt.refreshToken.refreshTokenDto.TokenRefreshSilentRefreshResponseDto;
-import Zvonok.jwt.refreshToken.refreshTokenRepository.RefreshTokenRepository;
+import Zvonok.auth.jwt.accessToken.JwtAccessTokenService;
+
+import Zvonok.redis.redisService.redisRefreshTokenService.RedisRefreshTokenService;
 import Zvonok.user.entity.User;
 import Zvonok.user.userRepository.UserRepository;
 import jakarta.servlet.http.Cookie;
@@ -18,9 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
+
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,9 +29,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RefreshTokenService {
 
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final JwtAccessTokenService jwtAccessTokenService;
     private final UserRepository userRepository;
+    private final RedisRefreshTokenService redisRefreshTokenService;
 
     @Value("${jwt.refresh.expiration}")
     private long refreshExpirationMs;
@@ -39,43 +38,25 @@ public class RefreshTokenService {
     // ================= ОСНОВНЫЕ МЕТОДЫ =================
 
     @Transactional
-    public RefreshToken createRefreshToken(User user, HttpServletResponse response) {
+    public String createRefreshToken(User user, HttpServletResponse response) {
 
         log.info("--- Создание Refresh-токена для пользователя: {} ---", user.getEmail());
 
         validateUserForRefresh(user, response);
 
         try {
-
-
-            log.info("Создаём новый refresh-токен (старые сессии остаются активными)");
-
-            // Проверка срока жизни
             if (refreshExpirationMs <= 0) {
                 throw new IllegalStateException("Время жизни refresh-токена должно быть положительным");
             }
 
-
             String tokenString = UUID.randomUUID().toString();
+            long ttlRefresh = refreshExpirationMs;
 
-            Instant expiryDate = Instant.now().plusMillis(refreshExpirationMs);
+            redisRefreshTokenService.savedRefreshToken(tokenString, user.getId(), ttlRefresh);
 
-            RefreshToken refreshToken = RefreshToken.builder()
-                    .user(user)
-                    .token(tokenString)
-                    .expiryDate(expiryDate)
-                    .revoked(false)
-                    .build();
+            log.info("=== Новый Refresh-токен создан для пользователя {} ===", user.getId(),tokenString,ttlRefresh);
 
-            RefreshToken savedToken = refreshTokenRepository.save(refreshToken);
-
-            // Установка cookie
-            setRefreshTokenCookie(response, tokenString);
-
-            log.info("=== Новый Refresh-токен создан (ID: {}, expires: {}) ===",
-                    savedToken.getId(), expiryDate);
-
-            return savedToken;
+            return tokenString;
 
         } catch (Exception e) {
             log.error("!!! НЕ УДАЛОСЬ создать refresh-токен !!!", e);
@@ -85,56 +66,43 @@ public class RefreshTokenService {
 
     // ================= ПРОВЕРКА ТОКЕНА =================
     @Transactional(readOnly = true)
-    public RefreshToken validateRefreshToken(String token) {
+    public Long validateRefreshToken(String token) {
         log.info("Валидация рефрешьТокена: {}", maskToken(token));
 
         if (token == null || token.trim().isEmpty()) {
-            log.error("рефрешьТокен пустой ");
-            throw new InvalidPasswordException("Refresh token не может быть пустым");
+            log.error("РефрешьТокен пустой ");
+            throw new RefreshTokenNotFoundException("Refresh token не может быть пустым");
         }
 
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
-                .orElseThrow(() -> {
-                    log.error("Рефрешь токен не найден в базе данных : {}", maskToken(token));
-                    return new InvalidPasswordException("Refresh token не найден");
-                });
+        Long userId = redisRefreshTokenService.getUserIdByRefreshToken(token);
 
-        log.info("Found token: ID={}, User={}, Expiry={}, Revoked={}",
-                refreshToken.getId(),
-                refreshToken.getUser().getEmail(),
-                refreshToken.getExpiryDate(),
-                refreshToken.isRevoked());
-
-        if (!refreshToken.isValid()) {
-            log.error("Token is invalid - Expired or Revoked");
-            log.error("Token valid: {}, Revoked: {}, Expired: {}",
-                    refreshToken.isValid(),
-                    refreshToken.isRevoked(),
-                    refreshToken.getExpiryDate().isBefore(Instant.now()));
-            throw new InvalidPasswordException("Refresh token недействителен или истек");
+        if (userId == null) {
+            log.error("Refresh token не найден или истёк: {}", maskToken(token));
+            throw new RefreshTokenInvalid("Refresh token не может быть пустым");
         }
 
-        log.info("Refresh token is valid for user: {}", refreshToken.getUser().getEmail());
-        return refreshToken;
+        log.info("Refresh token валиден для userId: {}", userId);
+
+        return userId;
     }
 
     // ================= ОБНОВЛЕНИЕ ТОКЕНА =================
     @Transactional
-    public TokenRefreshSilentRefreshResponseDto refreshAccessToken(String refreshToken, HttpServletResponse response) {
-        log.info("Попытка обновления access token");
+    public String rotateRefreshToken(String oldRefreshToken, User user, HttpServletResponse response) {
+        log.info("Попытка обновить RefreshToken");
+
+        if (oldRefreshToken == null || oldRefreshToken.trim().isEmpty()) {
+            log.error("Refresh token пустой для ротации");
+            throw new RefreshTokenInvalid("Refresh token не может быть пустым");
+        }
 
         try {
-            RefreshToken validatedToken = validateRefreshToken(refreshToken);
-            User user = validatedToken.getUser();
+            deleteRefreshToken(oldRefreshToken);
 
-            String newAccessToken = jwtAccessTokenService.generateAccessToken(user);
+            String newRefreshToken = createRefreshToken(user, response);
+            log.info("Ротация refresh токена успешна для пользователя: {}", user.getEmail());
 
-
-            return TokenRefreshSilentRefreshResponseDto.builder()
-                    .accessToken(newAccessToken)
-                    .refreshToken(refreshToken)
-                    .tokenType("Bearer")
-                    .build();
+            return newRefreshToken;
 
         } catch (Exception e) {
             log.error("Ошибка обновления токена: {}", e.getMessage(), e);
@@ -145,48 +113,28 @@ public class RefreshTokenService {
     // ================= УДАЛЕНИЕ ТОКЕНА =================
     @Transactional
     public void deleteRefreshToken(String token) {
-        log.info("Deleting refresh token: {}", maskToken(token));
+        log.info("Удаление рефрешь ткоена: {}", maskToken(token));
 
         if (token == null || token.trim().isEmpty()) {
-            log.warn("Attempted to delete null or empty token");
+            log.warn("Токен для удаления пустой");
             return;
         }
-
-        refreshTokenRepository.findByToken(token).ifPresentOrElse(
-                refreshToken -> {
-                    refreshTokenRepository.delete(refreshToken);
-                    log.info("Refresh token deleted successfully for user: {}",
-                            refreshToken.getUser().getEmail());
-                },
-                () -> log.warn("Refresh token not found for deletion: {}", maskToken(token))
-        );
+        redisRefreshTokenService.deleteRefreshToken(token);
     }
 
-    @Transactional
-    public void deleteAllUserTokens(User user) {
-        log.info("Deleting all refresh tokens for user: {}", user.getEmail());
-
-        if (user == null || user.getId() == null) {
-            log.error("Cannot delete tokens for null user");
-            throw new IllegalArgumentException("User cannot be null");
-        }
-
-        int deletedCount = refreshTokenRepository.deleteByUser(user);
-        log.info("Deleted {} refresh tokens for user: {}", deletedCount, user.getEmail());
-    }
 
     // ================= МЕТОДЫ ДЛЯ РАБОТЫ С COOKIE =================
 
-    private void setRefreshTokenCookie(HttpServletResponse response, String token) {
+    public void setRefreshTokenCookie(HttpServletResponse response, String token) {
 
         log.info("Установка cookie для refresh-токена");
 
         Cookie refreshCookie = new Cookie("refreshToken", token);
         refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(false); // для разработки false, в продакшене true
-        refreshCookie.setPath("/"); // ограничиваем путь cookie
-        refreshCookie.setMaxAge((int) (refreshExpirationMs / 1000)); // переводим миллисекунды в секунды
-        refreshCookie.setAttribute("SameSite", "Lax"); // Защита от CSRF
+        refreshCookie.setSecure(false);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge((int) (refreshExpirationMs / 1000));
+        refreshCookie.setAttribute("SameSite", "Lax");
 
         response.addCookie(refreshCookie);
 
@@ -204,14 +152,13 @@ public class RefreshTokenService {
         deleteCookie.setMaxAge(0);
 
         response.addCookie(deleteCookie);
-        log.info("Refresh token cookie cleared");
+        log.info("Refresh token cookie очищен");
     }
 
     // ================= МЕТОДЫ ДЛЯ ИЗВЛЕЧЕНИЯ ТОКЕНА ИЗ ЗАПРОСА =================
 
     public Optional<String> extractRefreshTokenFromRequest(HttpServletRequest request) {
         log.debug("Достаю рефрешь из куки");
-
 
         if (request.getCookies() != null) {
             return Arrays.stream(request.getCookies())
@@ -220,7 +167,6 @@ public class RefreshTokenService {
                     .map(Cookie::getValue);
         }
 
-        // Пробуем получить из заголовка (как fallback)
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return Optional.of(bearerToken.substring(7));
@@ -231,23 +177,7 @@ public class RefreshTokenService {
 
     // ================= ОЧИСТКА ПРОСРОЧЕННЫХ ТОКЕНОВ =================
 
-    @Transactional
-    public int cleanupExpiredTokens() {
-        log.info("Starting cleanup of expired refresh tokens");
 
-        List<RefreshToken> expiredTokens = refreshTokenRepository.findAll().stream()
-                .filter(token -> token.getExpiryDate().isBefore(Instant.now()))
-                .toList();
-
-        if (!expiredTokens.isEmpty()) {
-            refreshTokenRepository.deleteAll(expiredTokens);
-            log.info("Cleaned up {} expired refresh tokens", expiredTokens.size());
-        } else {
-            log.info("No expired tokens found");
-        }
-
-        return expiredTokens.size();
-    }
 
     // ================= ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ =================
 
@@ -290,6 +220,6 @@ public class RefreshTokenService {
             throw new UserNotFoundException("Пользователь не найден в базе данных");
         }
 
-        // -------------------------------------------------------------------- генерация рефрешь токена
+
     }
 }

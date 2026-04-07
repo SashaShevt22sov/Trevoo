@@ -4,10 +4,13 @@ import Zvonok.common.exception.customException.friendException.*;
 import Zvonok.common.exception.customException.jwtException.ExpiredJwtException;
 import Zvonok.common.exception.customException.jwtException.JwtGenerationException;
 import Zvonok.common.exception.customException.jwtException.JwtSecretException;
+import Zvonok.common.exception.customException.jwtException.JwtUserNotFound;
 import Zvonok.common.exception.customException.otpException.InvalidOtpCodeException;
 import Zvonok.common.exception.customException.otpException.OtpAttemptsExceededException;
 import Zvonok.common.exception.customException.otpException.TooManyRequestsException;
 import Zvonok.common.exception.customException.otpException.VerificationExpiredException;
+import Zvonok.common.exception.customException.privateChat.PrivateChatCreateAndGetException;
+import Zvonok.common.exception.customException.refreshTokenException.RefreshTokenInvalid;
 import Zvonok.common.exception.customException.refreshTokenException.RefreshTokenNotFoundException;
 import Zvonok.common.exception.customException.storageException.StorageAccessRuleNotFoundException;
 import Zvonok.common.exception.customException.userException.InvalidCredentialsException;
@@ -105,7 +108,33 @@ public class GlobalExceptionHandler {
 
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null, null);
     }
-    // ==================== JWT ОШИБКИ ====================
+
+    // ==================== PrivateChat ====================
+    @ExceptionHandler(PrivateChatCreateAndGetException.class)
+    public ResponseEntity<Map<String, Object>> handlePrivateChatCreateAndGetException(
+            TooManyRequestsException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null, null);
+    }
+
+    // =========================================================== JWT REFRESH ====================
+
+    @ExceptionHandler(RefreshTokenInvalid.class)
+    public ResponseEntity<Map<String, Object>> handleRefreshTokenInvalid(RefreshTokenInvalid ex) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), null, null);
+    }
+
+    @ExceptionHandler(RefreshTokenNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleRefreshTokenNotFoundException(RefreshTokenNotFoundException ex) {
+        Map<String, String> extra = Map.of("code", "REFRESH_TOKEN_MISSING");
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Refresh token обязателен", null, extra);
+    }
+
+    // =========================================================== JWT ОШИБКИ ====================
+    @ExceptionHandler(JwtUserNotFound.class)
+    public ResponseEntity<Map<String, Object>> handleJwtUserNotFound(JwtUserNotFound ex) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), null, null);
+    }
+
 
     @ExceptionHandler(JwtGenerationException.class)
     public ResponseEntity<Map<String, Object>> handleJwtGenerationException(JwtGenerationException ex) {
@@ -122,11 +151,6 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.UNAUTHORIZED, "AccessToken истек", null, null);
     }
 
-    @ExceptionHandler(RefreshTokenNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleRefreshTokenNotFoundException(RefreshTokenNotFoundException ex) {
-        Map<String, String> extra = Map.of("code", "REFRESH_TOKEN_MISSING");
-        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Refresh token обязателен", null, extra);
-    }
 
     // ==================== ОШИБКИ ВАЛИДАЦИИ ====================
 

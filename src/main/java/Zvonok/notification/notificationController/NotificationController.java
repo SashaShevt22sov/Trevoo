@@ -2,7 +2,7 @@ package Zvonok.notification.notificationController;
 
 import Zvonok.notification.notificationDto.NotificationAllResponseDto;
 import Zvonok.notification.notificationService.NotificationService;
-import Zvonok.userDetails.MyUserDetails;
+import Zvonok.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,7 +21,7 @@ public class NotificationController {
 
     // =============================================== Получю все уведомления пользователя которые (Не прочитаны)
     @GetMapping("/all-no-read")
-    public ResponseEntity<List<NotificationAllResponseDto>> notificationAll(@AuthenticationPrincipal MyUserDetails userDetails) {
+    public ResponseEntity<List<NotificationAllResponseDto>> notificationAll(@AuthenticationPrincipal User userDetails) {
 
         Long userId = userDetails.getId();
         return ResponseEntity.ok(notificationService.notificationAllUsers(userId));

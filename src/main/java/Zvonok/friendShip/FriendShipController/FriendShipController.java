@@ -4,7 +4,7 @@ import Zvonok.friendShip.FriendShipDto.ApiResponse;
 import Zvonok.friendShip.FriendShipDto.FriendShipAddRequest;
 import Zvonok.friendShip.FriendShipDto.FriendShipInfo;
 import Zvonok.friendShip.FriendShipService.FriendShipService;
-import Zvonok.userDetails.MyUserDetails;
+import Zvonok.user.entity.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,7 +48,7 @@ public class FriendShipController {
     @PostMapping("/add")
     public ResponseEntity<ApiResponse> addFriend(
            @Valid @RequestBody @Parameter(description = "username добавляемого пользователя") FriendShipAddRequest request,
-            @AuthenticationPrincipal @Parameter(hidden = true) MyUserDetails currentUser) {
+            @AuthenticationPrincipal @Parameter(hidden = true) User currentUser) {
 
         Long userId = currentUser.getId();
 
@@ -67,7 +66,7 @@ public class FriendShipController {
     })
     @GetMapping("/outgoing")
     public ResponseEntity<List<FriendShipInfo>> getOutgoingRequests(
-            @AuthenticationPrincipal @Parameter(hidden = true) MyUserDetails currentUser) {
+            @AuthenticationPrincipal @Parameter(hidden = true) User currentUser) {
 
         Long userId = currentUser.getId();
         log.debug("Fetching outgoing friend requests for userId={}", userId);
@@ -85,7 +84,7 @@ public class FriendShipController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Доступ запрещён")
     })
     @GetMapping("/friends")
-    public ResponseEntity<List<FriendShipInfo>> getFriends(@AuthenticationPrincipal @Parameter(hidden = true) MyUserDetails userDetails) {
+    public ResponseEntity<List<FriendShipInfo>> getFriends(@AuthenticationPrincipal @Parameter(hidden = true) User userDetails) {
         return ResponseEntity.ok(friendShipService.getFriends(userDetails.getId()));
     }
 
@@ -102,7 +101,7 @@ public class FriendShipController {
     @DeleteMapping("/cancel/{friendUsername}")
     public ResponseEntity<ApiResponse> cancelFriendRequest(
             @PathVariable @Parameter(description = "username добавляемого пользователя") String friendUsername,
-            @AuthenticationPrincipal @Parameter(hidden = true) MyUserDetails currentUser
+            @AuthenticationPrincipal @Parameter(hidden = true) User currentUser
     ) {
         Long userId = currentUser.getId();
 
@@ -123,7 +122,7 @@ public class FriendShipController {
     public ResponseEntity<ApiResponse> acceptFriendRequest(
             @PathVariable @Parameter(description = "user" +
                     "name добавляемого пользователя") String friendUsername,
-            @AuthenticationPrincipal @Parameter(hidden = true) MyUserDetails currentUser
+            @AuthenticationPrincipal @Parameter(hidden = true) User currentUser
     ) {
         Long userId = currentUser.getId();
 

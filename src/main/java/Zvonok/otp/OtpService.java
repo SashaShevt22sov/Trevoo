@@ -1,6 +1,6 @@
 package Zvonok.otp;
 
-import Zvonok.redis.RedisService;
+import Zvonok.redis.redisService.RedisService;
 import org.springframework.stereotype.Service;
 
 import java.util.Random;
