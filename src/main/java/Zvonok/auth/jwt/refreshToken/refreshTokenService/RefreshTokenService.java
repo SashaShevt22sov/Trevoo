@@ -1,12 +1,8 @@
 package Zvonok.auth.jwt.refreshToken.refreshTokenService;
 
-import Zvonok.common.exception.customException.refreshTokenException.RefreshTokenInvalid;
 import Zvonok.common.exception.customException.refreshTokenException.RefreshTokenNotFoundException;
-
 import Zvonok.common.exception.customException.userException.UserAlreadyExistsException;
 import Zvonok.common.exception.customException.userException.UserNotFoundException;
-import Zvonok.auth.jwt.accessToken.JwtAccessTokenService;
-
 import Zvonok.redis.redisService.redisRefreshTokenService.RedisRefreshTokenService;
 import Zvonok.user.entity.User;
 import Zvonok.user.userRepository.UserRepository;
@@ -71,14 +67,14 @@ public class RefreshTokenService {
 
         if (token == null || token.trim().isEmpty()) {
             log.error("РефрешьТокен пустой ");
-            throw new RefreshTokenNotFoundException("Refresh token не может быть пустым");
+            throw new RefreshTokenNotFoundException();
         }
 
         Long userId = redisRefreshTokenService.getUserIdByRefreshToken(token);
 
         if (userId == null) {
             log.error("Refresh token не найден или истёк: {}", maskToken(token));
-            throw new RefreshTokenInvalid("Refresh token не может быть пустым");
+            throw new RefreshTokenNotFoundException();
         }
 
         log.info("Refresh token валиден для userId: {}", userId);
@@ -93,7 +89,7 @@ public class RefreshTokenService {
 
         if (oldRefreshToken == null || oldRefreshToken.trim().isEmpty()) {
             log.error("Refresh token пустой для ротации");
-            throw new RefreshTokenInvalid("Refresh token не может быть пустым");
+            throw new RefreshTokenNotFoundException();
         }
 
         try {
@@ -217,7 +213,7 @@ public class RefreshTokenService {
 
         if (!userRepository.existsById(user.getId())) {
             log.error("Пользователь с ID {} отсутствует в базе данных", user.getId());
-            throw new UserNotFoundException("Пользователь не найден в базе данных");
+            throw new UserNotFoundException();
         }
 
 

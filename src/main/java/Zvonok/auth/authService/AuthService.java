@@ -150,7 +150,7 @@ public class AuthService {
         if (data == null) {
             log.info("Ошибка верификации: verificationId={} не найден или истёк",
                     req.getVerificationId());
-            throw new VerificationExpiredException("Срок действия кода истёк. Пожалуйста, запросите новый код.");
+            throw new VerificationExpiredException();
         }
 
         String email = data.getUserData().getEmail();
@@ -172,10 +172,10 @@ public class AuthService {
 
                 log.info("Превышено количество попыток OTP: email={}", email);
 
-                throw new OtpAttemptsExceededException("Слишком много неверных попыток. Попробуйте зарегистрироваться снова.");
+                throw new OtpAttemptsExceededException();
             }
 
-            throw new InvalidOtpCodeException("Неверный код. Осталось попыток: " + (otpData.getMaxAttempts() - newAttempts));
+            throw new InvalidOtpCodeException((otpData.getMaxAttempts() - newAttempts));
         }
 
         UserRegistrationData regData = data.getUserData();
@@ -218,7 +218,7 @@ public class AuthService {
         PendingRegistrationDto data = (PendingRegistrationDto) redisService.get(verificationKey);
 
         if (data == null) {
-            throw new VerificationExpiredException("Сессия регистрации истекла. Начните заново.");
+            throw new VerificationExpiredException();
         }
 
         OtpVerificationData otpData = data.getVerification();
@@ -230,7 +230,7 @@ public class AuthService {
 
         if (now - lastSent < RESEND_COOLDOWN_SECONDS) {
             long wait = RESEND_COOLDOWN_SECONDS - (now - lastSent);
-            throw new TooManyRequestsException("Повторная отправка доступна через " + wait + " сек.");
+            throw new TooManyRequestsException(wait);
         }
 
 
@@ -238,7 +238,7 @@ public class AuthService {
         if (currentResendCount >= MAX_RESEND_ATTEMPTS) {
             redisService.delete(verificationKey);
             redisService.delete(PENDING_EMAIL_KEY + data.getUserData().getEmail());
-            throw new OtpAttemptsExceededException("Превышено количество повторных отправок. Начните регистрацию заново.");
+            throw new OtpAttemptsExceededException();
         }
 
 
@@ -288,7 +288,7 @@ public class AuthService {
 
         if (!user.isRegisterVerify()) {
             log.warn("Попытка входа непроверенным пользователем: {}", email);
-            throw new VerificationExpiredException("Email не подтверждён. Проверьте ваш почтовый ящик.");
+            throw new VerificationExpiredException();
         }
 
 
@@ -424,11 +424,11 @@ public class AuthService {
     public TokenRefreshResponseDto refreshToken(HttpServletRequest request, HttpServletResponse response) {
         log.info("Refresh сервис : {}", Thread.currentThread());
         String refreshToken = refreshTokenService.extractRefreshTokenFromRequest(request)
-                .orElseThrow(() -> new RefreshTokenNotFoundException("Refresh token обязателен"));
+                .orElseThrow(RefreshTokenNotFoundException::new);
 
         Long userId = refreshTokenService.validateRefreshToken(refreshToken);
 
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
+        User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
 
         String newRefreshToken = refreshTokenService.rotateRefreshToken(refreshToken, user, response);
 

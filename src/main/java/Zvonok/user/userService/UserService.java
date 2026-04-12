@@ -1,7 +1,7 @@
 package Zvonok.user.userService;
 
 
-import Zvonok.common.exception.customException.userException.UserNotFoundException;
+
 import Zvonok.user.entity.User;
 import Zvonok.user.userRepository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,5 +19,7 @@ public class UserService {
     public List<User> getUserByIds(List<Long> userIds){
         return userRepository.findAllById(userIds);
     }
+
+
 
 }

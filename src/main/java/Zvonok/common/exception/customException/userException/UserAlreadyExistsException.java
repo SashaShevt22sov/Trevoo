@@ -1,7 +1,10 @@
 package Zvonok.common.exception.customException.userException;
 
-public class UserAlreadyExistsException extends RuntimeException {
+import Zvonok.common.exception.customException.BaseException;
+import org.springframework.http.HttpStatus;
+
+public class UserAlreadyExistsException extends BaseException {
     public UserAlreadyExistsException(String message) {
-        super(message);
+        super("USER_ALREADY_EXISTS", message, HttpStatus.CONFLICT);
     }
 }

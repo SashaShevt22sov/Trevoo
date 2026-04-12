@@ -1,7 +1,17 @@
 package Zvonok.common.exception.customException.otpException;
 
-public class TooManyRequestsException extends RuntimeException {
-    public TooManyRequestsException(String message) {
-        super(message);
+import Zvonok.common.exception.customException.BaseException;
+import org.springframework.http.HttpStatus;
+
+public class TooManyRequestsException extends BaseException {
+
+    private static final String CODE = "OTP_TOO_MANY_REQUESTS";
+
+    public TooManyRequestsException(long waitSeconds) {
+        super(
+                CODE,
+                "Повторная отправка доступна через " + waitSeconds + " сек.",
+                HttpStatus.TOO_MANY_REQUESTS
+        );
     }
 }

@@ -1,6 +1,6 @@
 package Zvonok.websocket.store;
 
-import Zvonok.websocket.entity.ConnectionInfo;
+import Zvonok.websocket.entity.connectionInfo.ConnectionInfo;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 

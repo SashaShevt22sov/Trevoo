@@ -1,6 +1,7 @@
 package Zvonok.notification.notificationService;
 
 
+import Zvonok.notification.notificationDto.NotificationsCountResponseDto;
 import Zvonok.notification.notificationType.NotificationType;
 import Zvonok.notification.entity.Notification;
 import Zvonok.notification.notificationDto.NotificationAllResponseDto;
@@ -11,13 +12,16 @@ import Zvonok.user.entity.User;
 import Zvonok.user.userRepository.UserRepository;
 import Zvonok.websocket.notification.service.WebSocketNotificationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
@@ -28,7 +32,7 @@ public class NotificationService {
 
 
     // =============================================== Создаю новое уведомление
-    public void createNotification(User sender, User recipient, String title, String message) {
+    public void createNotification(User sender, User recipient, NotificationType notificationType, String title, String message) {
 
         Notification notification = new Notification();
         notification.setCreatedAt(LocalDateTime.now());
@@ -36,7 +40,7 @@ public class NotificationService {
         notification.setRecipient(recipient);
         notification.setMessage(message);
         notification.setTitle(title);
-        notification.setType(NotificationType.FRIEND_REQUEST);
+        notification.setType(notificationType);
         notification.setRead(false);
 
         Notification savedNotification = notificationRepository.save(notification);
@@ -54,6 +58,27 @@ public class NotificationService {
 
 
     }
+
+    // =============================================== Получение количество уведомлений (Не прочитаныx)
+    public Map<String, Long> getUnReadNotifications(Long userId) {
+        List<NotificationsCountResponseDto> listCount = notificationRepository.countUnreadByType(userId);
+        log.info("list" + listCount);
+        Map<NotificationType, Long> mapCount = listCount.stream().collect(
+                Collectors.toMap(
+                        NotificationsCountResponseDto::getType,
+                        NotificationsCountResponseDto::getCount
+                )
+        );
+        log.info("map" + mapCount);
+        long friends = mapCount.getOrDefault(NotificationType.FRIEND_REQUEST, 0L);
+        long privateMessage = mapCount.getOrDefault(NotificationType.PRIVATE_MESSAGE, 0L);
+
+
+        System.out.println("оличество уведомлений друкзей" + friends);
+        return Map.of("friends_request", friends,
+                "private_message", privateMessage);
+    }
+
 
     // =============================================== Получение всех уведомлений пользователя которые (Не прочитаны)
 
@@ -95,6 +120,7 @@ public class NotificationService {
 
 
     }
+
     // =============================================== ХЕЛП МЕПТОДЫ
     private void sendDeleteWebSocket(Notification notif, User recipient) {
         WebSocketDeleteNotificationDto dtoDelete = new WebSocketDeleteNotificationDto();

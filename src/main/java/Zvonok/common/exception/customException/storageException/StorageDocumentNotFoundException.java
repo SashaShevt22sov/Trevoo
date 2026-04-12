@@ -1,10 +1,17 @@
 package Zvonok.common.exception.customException.storageException;
 
-public class StorageDocumentNotFoundException extends RuntimeException {
+import Zvonok.common.exception.customException.BaseException;
+import org.springframework.http.HttpStatus;
 
-    private static final String message = "Файл с идентификатором %s не найден";
+public class StorageDocumentNotFoundException extends BaseException {
+
+    private static final String CODE = "STORAGE_DOCUMENT_NOT_FOUND";
 
     public StorageDocumentNotFoundException(String id) {
-        super(String.format(message, id));
+        super(
+                CODE,
+                String.format("Файл с идентификатором %s не найден", id),
+                HttpStatus.NOT_FOUND
+        );
     }
 }

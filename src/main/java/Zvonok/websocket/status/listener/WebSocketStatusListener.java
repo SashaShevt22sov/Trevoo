@@ -1,6 +1,6 @@
 package Zvonok.websocket.status.listener;
 
-import Zvonok.websocket.entity.ConnectionInfo;
+import Zvonok.websocket.entity.connectionInfo.ConnectionInfo;
 import Zvonok.websocket.status.service.WebSocketStatusService;
 import Zvonok.websocket.store.WebSocketConnectionStore;
 import lombok.RequiredArgsConstructor;

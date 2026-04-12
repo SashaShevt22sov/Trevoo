@@ -1,7 +1,10 @@
 package Zvonok.common.exception.customException.userException;
 
-public class InvalidCredentialsException extends RuntimeException {
+import Zvonok.common.exception.customException.BaseException;
+import org.springframework.http.HttpStatus;
+
+public class InvalidCredentialsException extends BaseException {
     public InvalidCredentialsException(String message) {
-        super(message);
+        super("INVALID_CREDENTIALS", message, HttpStatus.UNAUTHORIZED);
     }
 }

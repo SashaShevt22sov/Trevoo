@@ -1,7 +1,14 @@
-package Zvonok.websocket.entity;
+package Zvonok.websocket.entity.connectionInfo;
+
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.HashSet;
 import java.util.Set;
+@Getter
+@Setter
 
 public class ConnectionInfo {
     private final String sessionId;

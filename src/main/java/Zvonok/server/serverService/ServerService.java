@@ -41,7 +41,7 @@ public class ServerService {
 
             if (!userExists) {
                 log.error("❌ ОШИБКА: Пользователь с ID {} не найден в БД", userId);
-                throw new UserNotFoundException("Пользователь с ID " + userId + " не найден");
+                throw new UserNotFoundException();
             }
 
             log.info("   👤 Получаю ссылку на пользователя (прокси)");

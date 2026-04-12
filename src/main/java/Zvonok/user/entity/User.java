@@ -49,7 +49,7 @@ public class User {
     @Column(name = "role")
     private Set<Role> roles = new HashSet<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<FriendShip> outgoingFriendships = new HashSet<>();
 
     @OneToMany(mappedBy = "friend", cascade = CascadeType.ALL, orphanRemoval = true)

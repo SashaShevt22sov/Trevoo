@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/notification")
@@ -26,5 +27,10 @@ public class NotificationController {
         Long userId = userDetails.getId();
         return ResponseEntity.ok(notificationService.notificationAllUsers(userId));
 
+    }
+    // =============================================== Количество уведомлений (Не прочитаны)
+    @GetMapping("/unread-count")
+    public ResponseEntity<Map<String, Long>> getUnreadCounts(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(notificationService.getUnReadNotifications(user.getId()));
     }
 }

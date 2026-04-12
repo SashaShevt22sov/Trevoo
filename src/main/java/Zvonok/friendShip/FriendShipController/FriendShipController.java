@@ -27,7 +27,7 @@ public class FriendShipController {
 
     private final FriendShipService friendShipService;
 
-
+    // ========================================================= Заявка на добавление в друзья
     @Operation(
             summary = "Заявка на добавления в друзья", description = "Заявка на добавления в друзья"
     )
@@ -56,9 +56,14 @@ public class FriendShipController {
 
         return ResponseEntity.ok(new ApiResponse("Заявка успешно отправлена"));
     }
-
+    // ========================================================= Список входящих заявок пользователю
+    @GetMapping("/incoming")
+    public ResponseEntity<List<FriendShipInfo>>getIncomingRequest(@AuthenticationPrincipal User user){
+return  ResponseEntity.ok(friendShipService.getIncoming(user.getId()));
+    }
+    // ========================================================= Список отправленных заявок пользователем
     @Operation(
-            summary = "Список все заявок пользователя"
+            summary = "Список отправленных заявок пользователем"
     )
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Список отправленных заявок на дружбу (PENDING)"),

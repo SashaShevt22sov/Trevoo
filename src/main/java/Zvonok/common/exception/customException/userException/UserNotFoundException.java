@@ -1,7 +1,10 @@
 package Zvonok.common.exception.customException.userException;
 
-public class UserNotFoundException extends RuntimeException {
-    public UserNotFoundException(String message) {
-        super(message);
+import Zvonok.common.exception.customException.BaseException;
+import org.springframework.http.HttpStatus;
+
+public class UserNotFoundException extends BaseException {
+    public UserNotFoundException() {
+        super("USER_NOT_FOUND","Пользователь не найден", HttpStatus.NOT_FOUND);
     }
 }

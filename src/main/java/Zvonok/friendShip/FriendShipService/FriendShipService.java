@@ -10,6 +10,7 @@ import Zvonok.friendShip.FriendShipRepository.FriendShipRepository;
 import Zvonok.friendShip.FriendShipType.FriendShipType;
 import Zvonok.friendShip.entity.FriendShip;
 import Zvonok.notification.notificationService.NotificationService;
+import Zvonok.notification.notificationType.NotificationType;
 import Zvonok.user.entity.User;
 import Zvonok.user.userRepository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -40,13 +41,13 @@ public class FriendShipService {
     @Transactional
     public void addFriend(String friendUsername, Long userId) {
 
-        User user = getUserById(userId); // -- Хелп метод (Проверяю существует ли Отправитель)
+        User sender = getUserById(userId); // -- Хелп метод (Проверяю существует ли Отправитель)
         User friend = getUserByUsername(friendUsername); // -- Хелп метод (Проверяю существует ли получатель)
 
-        validateNotSameUser(user, friend); // -- Хелп метод (Сравниваю ники что бы нельзя было добавить самого себя)
+        validateNotSameUser(sender, friend); // -- Хелп метод (Сравниваю ники что бы нельзя было добавить самого себя)
 
         // -- Проверяю взаимные связи
-        Optional<FriendShip> existing = friendShipRepository.findRelation(user, friend);
+        Optional<FriendShip> existing = friendShipRepository.findRelation(sender, friend);
 
 
         if (existing.isPresent()) {
@@ -60,7 +61,7 @@ public class FriendShipService {
 
 
         // ======= ПОДСЧЁТ И ОГРАНИЧЕНИЕ =======
-        long pendingCount = friendShipRepository.countPendingByUser(user);
+        long pendingCount = friendShipRepository.countPendingByUser(sender);
         if (pendingCount >= maxPendingRequests) {
             throw new TooManyPendingRequestsException(
                     "Вы достигли лимита исходящих заявок (максимум 10)"
@@ -68,7 +69,7 @@ public class FriendShipService {
         }
 
         FriendShip fs = FriendShip.builder()
-                .user(user)
+                .sender(sender)
                 .friend(friend)
                 .updatedAt(now())
                 .createdAt(now())
@@ -78,7 +79,7 @@ public class FriendShipService {
         friendShipRepository.save(fs);
 
         notificationService.createNotification
-                (user, friend, "Заявка в друзья",
+                (sender, friend, NotificationType.FRIEND_REQUEST,"Заявка в друзья",
                         "Хочет добавить вас в друзья");
 
         log.info("Новая заявка в друзья отправлена. user={}, friend={}", userId, friend.getId());
@@ -89,11 +90,11 @@ public class FriendShipService {
     @Transactional
     public String cancelFriendRequest(Long userId, String friendUsername) {
 
-        User userSender = getUserById(userId);
+        User sender = getUserById(userId);
         User friendRecipient = userRepository.findByUsername(friendUsername)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
+                .orElseThrow(UserNotFoundException::new);
 
-        Optional<FriendShip> existing = friendShipRepository.findRelation(userSender, friendRecipient);
+        Optional<FriendShip> existing = friendShipRepository.findRelation(sender, friendRecipient);
 
         if (existing.isEmpty() || existing.get().getStatus() != FriendShipType.PENDING) {
             throw new IllegalStateException("Заявка не найдена или уже принята");
@@ -102,13 +103,13 @@ public class FriendShipService {
         FriendShip friendShip = existing.get();
 
         // Проверка что пользователь является участником заявки
-        if (!friendShip.getUser().equals(userSender) && !friendShip.getFriend().equals(userSender)) {
+        if (!friendShip.getSender().equals(sender) && !friendShip.getFriend().equals(sender)) {
             throw new NoPermissionException("Нет прав на выполнение действия");
         }
 
         friendShipRepository.delete(friendShip);
 
-        notificationService.deleteNotification(userSender, friendRecipient);
+        notificationService.deleteNotification(sender, friendRecipient);
         return "Заявка успешно отменена";
     }
 
@@ -118,7 +119,7 @@ public class FriendShipService {
     public String acceptFriendRequest(Long userId, String friendUsername) {
         User user = getUserById(userId);
         User friend = userRepository.findByUsername(friendUsername)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
+                .orElseThrow(UserNotFoundException::new);
 
         Optional<FriendShip> existing = friendShipRepository.findRelation(user, friend);
 
@@ -145,7 +146,7 @@ public class FriendShipService {
         User user = getUserById(userId);
 
         return friendShipRepository
-                .findAllByUserAndStatus(user, FriendShipType.PENDING)
+                .findAllBySenderAndStatus(user, FriendShipType.PENDING)
                 .stream()
                 .map(fs -> new FriendShipInfo(
                         fs.getFriend().getId(),
@@ -154,6 +155,29 @@ public class FriendShipService {
                         fs.getCreatedAt()
                 ))
                 .collect(Collectors.toList());
+    }
+    // ========================================================= Получить входящие заявки пользователя
+
+        @Transactional
+        public List<FriendShipInfo> getIncoming(Long userId) {
+
+            User user = getUserById(userId);
+
+            List<FriendShip> list = friendShipRepository
+                    .findAllByFriendAndStatus(user, FriendShipType.PENDING);
+
+            log.info("👉 ВХОДЯЩИЕ ЗАЯВКИ ПОЛЬЗОВАТЕЛЮ : {}", list.size());
+            list.forEach(fs -> log.info("👉 {}", fs));
+
+            return list.stream()
+                    .map(fs -> new FriendShipInfo(
+                            fs.getSender().getId(),
+                            fs.getSender().getUsername(),
+                            fs.getStatus(),
+                            fs.getCreatedAt()
+                    ))
+                    .collect(Collectors.toList());
+
     }
 
     // ========================================================= Получить список друзей (ACCEPT)
@@ -164,13 +188,13 @@ public class FriendShipService {
 
         return friendShipRepository.findAllAcceptedFriends(user).stream()
                 .map(fs -> {
-                    User friend = fs.getUser().equals(user) ? fs.getFriend() : fs.getUser();
+                    User friend = fs.getSender().equals(user) ? fs.getFriend() : fs.getSender();
+
                     return new FriendShipInfo(
-                            fs.getFriend().getId(),
+                            friend.getId(),
                             friend.getUsername(),
                             fs.getStatus(),
                             fs.getCreatedAt()
-
                     );
                 })
                 .collect(Collectors.toList());
@@ -181,12 +205,12 @@ public class FriendShipService {
 
     private User getUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
+                .orElseThrow(UserNotFoundException::new);
     }
 
     private User getUserByUsername(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с таким никнеймом не найден"));
+                .orElseThrow(UserNotFoundException::new);
     }
 
     private void validateNotSameUser(User user, User friend) {

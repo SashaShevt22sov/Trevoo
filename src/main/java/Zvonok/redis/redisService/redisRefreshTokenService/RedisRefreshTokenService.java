@@ -25,6 +25,7 @@ public class RedisRefreshTokenService {
         stringRedisTemplate.opsForValue().set(
                 key, String.valueOf(userId), ttl, TimeUnit.MILLISECONDS
         );
+        log.info("TTL refresh (ms): {}", ttl);
     }
 
     // ================= Получить =================

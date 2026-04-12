@@ -1,5 +1,6 @@
 package Zvonok.common.exception;
 
+import Zvonok.common.exception.customException.BaseException;
 import Zvonok.common.exception.customException.friendException.*;
 import Zvonok.common.exception.customException.jwtException.ExpiredJwtException;
 import Zvonok.common.exception.customException.jwtException.JwtGenerationException;
@@ -14,9 +15,9 @@ import Zvonok.common.exception.customException.refreshTokenException.RefreshToke
 import Zvonok.common.exception.customException.refreshTokenException.RefreshTokenNotFoundException;
 import Zvonok.common.exception.customException.storageException.StorageAccessRuleNotFoundException;
 import Zvonok.common.exception.customException.userException.InvalidCredentialsException;
-import Zvonok.common.exception.customException.userException.InvalidPasswordException;
 import Zvonok.common.exception.customException.userException.UserAlreadyExistsException;
 import Zvonok.common.exception.customException.userException.UserNotFoundException;
+import Zvonok.common.exception.errorResponse.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -31,187 +32,47 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    //  ==================== USER EXCEPTIONS ====================
-
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleUserAlreadyExistsException(UserAlreadyExistsException ex) {
-        return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), null, null);
+    @ExceptionHandler(BaseException.class)
+    public ResponseEntity<ErrorResponse> handleBaseException(BaseException ex) {
+        return ResponseEntity
+                .status(ex.getStatus())
+                .body(new ErrorResponse(
+                        ex.getCode(),
+                        ex.getMessage(),
+                        null
+                ));
     }
-
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleUserNotFoundException(UserNotFoundException ex) {
-        return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), null, null);
-    }
-
-    @ExceptionHandler(InvalidPasswordException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidPasswordException(InvalidPasswordException ex) {
-        return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), null, null);
-    }
-
-    @ExceptionHandler(InvalidCredentialsException.class)
-
-    public ResponseEntity<Map<String, Object>> handleInvalidCredentialsException(InvalidCredentialsException ex) {
-        return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), null, null);
-    }
-
-    // ==================== OTP EXCEPTIONS ====================
-
-    @ExceptionHandler(VerificationExpiredException.class)
-    public ResponseEntity<Map<String, Object>> handleVerificationExpiredException(VerificationExpiredException ex) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null, null);
-    }
-
-    @ExceptionHandler(InvalidOtpCodeException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidOtpCodeException(InvalidOtpCodeException ex) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null, null);
-    }
-
-    @ExceptionHandler(TooManyRequestsException.class)
-    public ResponseEntity<Map<String, Object>> handleTooManyRequestsException(TooManyRequestsException ex) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null, null);
-    }
-
-    @ExceptionHandler(OtpAttemptsExceededException.class)
-    public ResponseEntity<Map<String, Object>> handleOtpAttemptsExceededException(OtpAttemptsExceededException ex) {
-        return buildErrorResponse(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), null, null);
-    }
-
-    // ==================== FRIEND ОШИБКИ ====================
-
-    @ExceptionHandler(AlreadyFriendsException.class)
-    public ResponseEntity<Map<String, Object>> handleAlreadyFriendsException(AlreadyFriendsException ex) {
-        return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), null, null);
-    }
-
-    @ExceptionHandler(FriendRequestAlreadySentException.class)
-    public ResponseEntity<Map<String, Object>> handleFriendRequestAlreadySentException(FriendRequestAlreadySentException ex) {
-        return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), null, null);
-    }
-
-    @ExceptionHandler(CannotAddYourselfAsFriendException.class)
-    public ResponseEntity<Map<String, Object>> handleCannotAddYourselfAsFriendException(
-            CannotAddYourselfAsFriendException ex) {
-
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null, null);
-    }
-
-    @ExceptionHandler(NoPermissionException.class)
-    public ResponseEntity<Map<String, Object>> handleNoPermissionException(
-            NoPermissionException ex) {
-
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null, null);
-    }
-
-    @ExceptionHandler(TooManyPendingRequestsException.class)
-    public ResponseEntity<Map<String, Object>> handleTooManyPendingRequestsException(
-            TooManyRequestsException ex) {
-
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null, null);
-    }
-
-    // ==================== PrivateChat ====================
-    @ExceptionHandler(PrivateChatCreateAndGetException.class)
-    public ResponseEntity<Map<String, Object>> handlePrivateChatCreateAndGetException(
-            TooManyRequestsException ex) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null, null);
-    }
-
-    // =========================================================== JWT REFRESH ====================
-
-    @ExceptionHandler(RefreshTokenInvalid.class)
-    public ResponseEntity<Map<String, Object>> handleRefreshTokenInvalid(RefreshTokenInvalid ex) {
-        return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), null, null);
-    }
-
-    @ExceptionHandler(RefreshTokenNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleRefreshTokenNotFoundException(RefreshTokenNotFoundException ex) {
-        Map<String, String> extra = Map.of("code", "REFRESH_TOKEN_MISSING");
-        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Refresh token обязателен", null, extra);
-    }
-
-    // =========================================================== JWT ОШИБКИ ====================
-    @ExceptionHandler(JwtUserNotFound.class)
-    public ResponseEntity<Map<String, Object>> handleJwtUserNotFound(JwtUserNotFound ex) {
-        return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), null, null);
-    }
-
-
-    @ExceptionHandler(JwtGenerationException.class)
-    public ResponseEntity<Map<String, Object>> handleJwtGenerationException(JwtGenerationException ex) {
-        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), null, null);
-    }
-
-    @ExceptionHandler(JwtSecretException.class)
-    public ResponseEntity<Map<String, Object>> handleJwtSecretException(JwtSecretException ex) {
-        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), null, null);
-    }
-
-    @ExceptionHandler(ExpiredJwtException.class)
-    public ResponseEntity<Map<String, Object>> handleExpiredJwt(ExpiredJwtException ex) {
-        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "AccessToken истек", null, null);
-    }
-
 
     // ==================== ОШИБКИ ВАЛИДАЦИИ ====================
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String field = ((FieldError) error).getField();
-            String msg = error.getDefaultMessage();
-            errors.put(field, msg);
-        });
+    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
 
-        return buildErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                "Проверьте введённые данные",
-                errors,
-                null
+        Map<String, String> errors = new HashMap<>();
+
+        ex.getBindingResult().getFieldErrors().forEach(err ->
+                errors.put(err.getField(), err.getDefaultMessage())
+        );
+
+        return ResponseEntity.badRequest().body(
+                new ErrorResponse(
+                        "VALIDATION_ERROR",
+                        "Проверьте введённые данные",
+                        errors
+                )
         );
     }
 
-    // ==================== ОБЩИЕ ХРАНИЛИЩА ====================
-
-    @ExceptionHandler(StorageAccessRuleNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleGlobalException(StorageAccessRuleNotFoundException ex) {
-
-        return buildErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                ex.getMessage(), null, null);
-    }
-
     // ==================== ОБЩИЕ ОШИБКИ ====================
-
-//    @ExceptionHandler(Exception.class)
-//    public ResponseEntity<Map<String, Object>> handleGlobalException(Exception ex) {
-//
-//        return buildErrorResponse(
-//                HttpStatus.INTERNAL_SERVER_ERROR,
-//                "Произошла ошибка на сервере", null, null);
-//    }
-
-    // ==================== УТИЛИТЫ ====================
-
-    private ResponseEntity<Map<String, Object>> buildErrorResponse(
-            HttpStatus status,
-            String message,
-            Map<String, String> validationErrors, Map<String, String> extraFields) {
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", status.value());
-        body.put("error", status.getReasonPhrase());
-        body.put("message", message);
-
-        if (validationErrors != null && !validationErrors.isEmpty()) {
-            body.put("validationErrors", validationErrors);
-        }
-
-        if (extraFields != null) {
-            body.putAll(extraFields);
-        }
-
-        return new ResponseEntity<>(body, status);
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnknown(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                new ErrorResponse(
+                        "INTERNAL_ERROR",
+                        "Произошла ошибка на сервере",
+                        null
+                )
+        );
     }
+
+
 }

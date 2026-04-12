@@ -14,6 +14,7 @@ public class WebSocketNotificationService {
     private final SimpMessagingTemplate messagingTemplate;
 
     public void sendNotification(WebSocketNotificationResponseDto dto, String recipientUsername) {
+
         // ----------------- Отправка уведомлений
         messagingTemplate.convertAndSendToUser(
                 recipientUsername,
