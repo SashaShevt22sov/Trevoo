@@ -24,7 +24,17 @@
 	</properties>
 
 	<dependencies>
+		<!-- FLYWAY -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
 
+		<!-- Специфическая поддержка PostgreSQL (решает "Unsupported Database") -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
 		<!-- WEB -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

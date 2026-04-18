@@ -1,0 +1,22 @@
+package Zvonok.features.auth.passwordResetToken.passwordResetRepository;
+
+import Zvonok.features.auth.passwordResetToken.entity.PasswordResetToken;
+import Zvonok.features.user.entity.User;
+import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+
+public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, Long> {
+
+    Optional<PasswordResetToken> findByToken(String token);
+    void deleteByUser(User user);
+
+    @Modifying
+    @Query("DELETE FROM PasswordResetToken t WHERE t.expiryDate < :now")
+    void deleteAllExpired(@Param("now") LocalDateTime now);
+}
