@@ -23,9 +23,9 @@ spring:
     default-bucket-name: ${MINIO_DEFAULT_APP_BUCKET:trevoo}
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/zvonokdb
-    username: admin
-    password: 1234
+    url: ${DATASOURCE_URL_POSTGRES}
+    username: ${DATASOURCE_USERNAME_POSTGRES}
+    password: ${DATASOURCE_PASSWORD_POSTGRES}
     driver-class-name: org.postgresql.Driver
     hikari:
       minimum-idle: 10          # минимальные соединения в пуле
