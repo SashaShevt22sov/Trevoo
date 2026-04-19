@@ -29,17 +29,18 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-flyway</artifactId>
 		</dependency>
-
 		<!-- Специфическая поддержка PostgreSQL (решает "Unsupported Database") -->
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
+
 		<!-- WEB -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
+
      <!-- MAIL -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -51,6 +52,7 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
+
 		<!-- Для date в redis -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>

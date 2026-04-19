@@ -1,7 +1,6 @@
 package Zvonok.infrastructure.websocket.interceptor;
 
 
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
@@ -20,7 +19,6 @@ import java.time.LocalDateTime;
 public class JwtWebSocketInterceptor implements ChannelInterceptor {
 
     private final JwtWebSocketInterceptorService jwtWebSocketInterceptorService;
-
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -44,8 +42,13 @@ public class JwtWebSocketInterceptor implements ChannelInterceptor {
                 jwtWebSocketInterceptorService.handleConnect(accessor, sessionId);
                 break;
             case SUBSCRIBE:
-                jwtWebSocketInterceptorService.handleSubscribe(accessor,sessionId);
+                jwtWebSocketInterceptorService.handleSubscribe(accessor, sessionId);
                 break;
+            case DISCONNECT:
+                jwtWebSocketInterceptorService.handleDisconnect(accessor, sessionId);
+                break;
+            case UNSUBSCRIBE:
+                jwtWebSocketInterceptorService.handleUnsubscribe(accessor, sessionId);
             default:
                 log.debug("Команда {} не требует специальной обработки", command);
         }

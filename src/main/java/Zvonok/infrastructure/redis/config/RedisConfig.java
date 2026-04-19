@@ -22,9 +22,7 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
 
-
         RedisSerializer<String> keySerializer = RedisSerializer.string();
-
 
         RedisSerializer<Object> valueSerializer = RedisSerializer.json();
 

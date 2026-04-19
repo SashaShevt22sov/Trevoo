@@ -1,8 +1,6 @@
-package Zvonok.infrastructure.websocket.entity.connectionInfo;
+package Zvonok.infrastructure.websocket.websocket.store.entity.connectionInfo;
 
-import lombok.Data;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.HashSet;

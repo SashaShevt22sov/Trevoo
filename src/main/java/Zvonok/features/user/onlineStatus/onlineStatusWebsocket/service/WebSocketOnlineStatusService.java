@@ -1,4 +1,4 @@
-package Zvonok.infrastructure.websocket.status.service;
+package Zvonok.features.user.onlineStatus.onlineStatusWebsocket.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class WebSocketStatusService {
+public class WebSocketOnlineStatusService {
 
     private final SimpMessagingTemplate messagingTemplate;
 

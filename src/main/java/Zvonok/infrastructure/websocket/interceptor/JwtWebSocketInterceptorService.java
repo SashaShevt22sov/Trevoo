@@ -3,7 +3,7 @@ package Zvonok.infrastructure.websocket.interceptor;
 import Zvonok.features.auth.jwt.accessToken.JwtAccessTokenService;
 import Zvonok.features.auth.myUserDetails.MyUserDetailsService;
 
-import Zvonok.infrastructure.websocket.store.WebSocketConnectionStore;
+import Zvonok.infrastructure.websocket.websocket.store.service.WebSocketConnectionStoreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -19,11 +19,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class JwtWebSocketInterceptorService {
 
-    private final WebSocketConnectionStore webSocketConnectionStore;
+    private final WebSocketConnectionStoreService webSocketConnectionStore;
     private final JwtAccessTokenService jwtAccessTokenService;
     private final MyUserDetailsService myUserDetailsService;
 
-
+    // =========================== Обработка конект
     public void handleConnect(StompHeaderAccessor accessor, String sessionId) {
         log.info("🔌 Обработка CONNECT запроса для WebSocket подключения");
 
@@ -71,6 +71,21 @@ public class JwtWebSocketInterceptorService {
             throw new IllegalArgumentException("Ошибка валидации JWT: " + e.getMessage());
         }
     }
+    // =========================== Обработка дисконект
+    public void handleDisconnect(StompHeaderAccessor accessor, String sessionId) {
+        log.info("❌ WebSocket DISCONNECT: {}", sessionId);
+
+        String username = accessor.getUser() != null
+                ? accessor.getUser().getName()
+                : null;
+
+        webSocketConnectionStore.removeConnection(sessionId);
+
+        log.info("🧹 Удалена сессия: {}", sessionId);
+        log.info("👤 Пользователь отключился: {}", username);
+    }
+
+    // =========================== Обработка подписки
    public void handleSubscribe(StompHeaderAccessor accessor, String sessionId) {
         String destination = accessor.getDestination();
         String username = accessor.getUser() != null ? accessor.getUser().getName() : "anonymous";
@@ -81,10 +96,25 @@ public class JwtWebSocketInterceptorService {
 
         webSocketConnectionStore.addSubscription(sessionId,destination );
 
-
         log.info("✅ Подписка на {} успешно оформлена", destination);
         log.info("📊 Всего активных подписок для сессии {}: {}",
                 sessionId, webSocketConnectionStore.getUserSessions());
+    }
 
+    // =========================== Обработка отписки
+    public void handleUnsubscribe(StompHeaderAccessor accessor, String sessionId) {
+        String destination = accessor.getDestination();
+        String username = accessor.getUser() != null
+                ? accessor.getUser().getName()
+                : "anonymous";
+
+        log.info("❌ UNSUBSCRIBE");
+        log.info("User: {}", username);
+        log.info("Session: {}", sessionId);
+        log.info("Destination: {}", destination);
+
+        webSocketConnectionStore.removeSubscription(sessionId, destination);
+
+        log.info("✅ Подписка удалена: {}", destination);
     }
 }

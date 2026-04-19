@@ -1,6 +1,6 @@
-package Zvonok.infrastructure.websocket.store;
+package Zvonok.infrastructure.websocket.websocket.store.service;
 
-import Zvonok.infrastructure.websocket.entity.connectionInfo.ConnectionInfo;
+import Zvonok.infrastructure.websocket.websocket.store.entity.connectionInfo.ConnectionInfo;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 
@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @Getter
-public class WebSocketConnectionStore {
+public class WebSocketConnectionStoreService {
 
     // sessionId -> ConnectionInfo
     private final Map<String, ConnectionInfo> connections = new ConcurrentHashMap<>();
